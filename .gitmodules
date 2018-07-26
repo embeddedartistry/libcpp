@@ -1,0 +1,3 @@
+[submodule "libcxxabi"]
+	path = libcxxabi
+	url = git@github.com:embeddedartistry/libcxxabi.git

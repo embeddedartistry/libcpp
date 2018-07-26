@@ -19,14 +19,14 @@ ENFORCESIZE = @(FILESIZE=`stat -f '%z' $1` ; \
 
 BUILDRESULTS?=buildresults
 
-all: experimental
+all: buildall
 
 groundwork:
 	$(Q) mkdir -p $(BUILDRESULTS)
 	$(Q) meson $(BUILDRESULTS)
 
-.PHONY: experimental
-experimental: groundwork
+.PHONY: buildall
+buildall: groundwork
 	$(Q)cd $(BUILDRESULTS); ninja
 
 .PHONY: docs

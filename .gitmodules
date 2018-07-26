@@ -4,3 +4,6 @@
 [submodule "libcxx"]
 	path = libcxx
 	url = git@github.com:embeddedartistry/libcxx.git
+[submodule "tools/llvm-lit2"]
+	path = tools/llvm-lit
+	url = git@github.com:embeddedartistry/llvm-lit.git

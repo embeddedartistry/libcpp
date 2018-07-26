@@ -1,3 +1,6 @@
 [submodule "libcxxabi"]
 	path = libcxxabi
 	url = git@github.com:embeddedartistry/libcxxabi.git
+[submodule "libcxx"]
+	path = libcxx
+	url = git@github.com:embeddedartistry/libcxx.git

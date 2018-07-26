@@ -7,3 +7,6 @@
 [submodule "tools/llvm-lit2"]
 	path = tools/llvm-lit
 	url = git@github.com:embeddedartistry/llvm-lit.git
+[submodule "build"]
+	path = build
+	url = git@github.com:embeddedartistry/meson-buildsystem.git

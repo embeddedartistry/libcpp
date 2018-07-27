@@ -17,6 +17,8 @@ libcxx_include = libcxx_root + '/include'
 
 build_type = get_option('buildtype')
 
+subdir('build/ea-stdlib')
+
 #########################
 # Process Build Options #
 #########################
@@ -35,7 +37,8 @@ libcxxabi_output_dir = meson.build_root() + '/libcxxabi'
 
 libcxxabi_args = [
 	'-DLIBCXXABI_LIBCXX_INCLUDES=' + libcxx_include,
-	'-DLIBCXXABI_ENABLE_SHARED=OFF'
+	'-DLIBCXXABI_ENABLE_SHARED=OFF',
+	#'-DLLVM_LIBRARY_OUTPUT_INTDIR=' + meson.build_root(),
 ]
 
 if build_type == 'release'
@@ -55,19 +58,24 @@ if use_compiler_rt == true
 endif
 
 
-libcxxabi_cmake_dep = custom_target(
+libcxxabi_cmake = custom_target(
 	'libcxxabi_cmake',
-	output: ['libcxxabi_cmake'],
+	output: ['libcxxabi'],
 	command: [cmake_prep, libcxxabi_output_dir, libcxxabi_args, '-B' + libcxxabi_output_dir, '-H' + libcxxabi_root],
 )
 
-# TODO: Remove build by default
+# TODO: add depend_files
 libcxxabi_build = custom_target(
-	'c++abi',
+	'libcxxabi',
+	input: [libcxxabi_cmake],
 	output: ['libc++abi.a'],
 	command: ['make', '-C', libcxxabi_output_dir],
-	depends: libcxxabi_cmake_dep,
-	build_by_default: true
+)
+
+libcxxabi_dep = declare_dependency(
+	include_directories: include_directories('libcxxabi/include'),
+	compile_args: stdlib_compiler_flags,
+	link_args: stdlib_link_flags + ['-L' + libcxxabi_output_dir + '/lib', '-lc++abi'],
 )
 
 ##########
@@ -83,6 +91,9 @@ libcxx_args = [
 	'-DLIBCXX_ENABLE_FILESYSTEM=OFF',
 	'-DLIBCXX_INCLUDE_DOCS=OFF',
 	'-DLIBCXX_INCLUDE_BENCHMARKS=OFF',
+	'-DCMAKE_INSTALL_PREFIX=' + meson.build_root(),
+	'-DLLVM_LIBRARY_OUTPUT_INTDIR=' + meson.build_root(),
+	#'-DLLVM_BINARY_DIR=' + meson.build_root(),
 	#'-DLIBCXX_CXX_ABI=none'
 ]
 
@@ -110,17 +121,23 @@ if enable_pedantic_error == true
 	libcxx_args += '-DLIBCXX_ENABLE_PEDANTIC=ON'
 endif
 
-libcxx_cmake_dep = custom_target(
+libcxx_cmake = custom_target(
 	'libcxx_cmake',
-	output: ['libcxx_cmake'],
+	output: ['libcxx'],
 	command: [cmake_prep, libcxx_output_dir, libcxx_args, '-B' + libcxx_output_dir, '-H' + libcxx_root],
 )
 
-# TODO: Remove build by default
 libcxx_build = custom_target(
 	'libcxx',
-	output: ['libc++.a'],
-	command: ['make', '-C', libcxx_output_dir],
-	depends: [libcxxabi_build, libcxx_cmake_dep],
+	input: [libcxxabi_build, libcxx_cmake],
+	output: ['libc++.a', 'libc++experimental.a', 'include'],
+	command: ['make', '-C', libcxx_output_dir, 'install'],
 	build_by_default: true
+)
+
+libcxx_dep = declare_dependency(
+	sources: libcxx_build[2],
+	include_directories: include_directories('libcxx/include'),
+	compile_args: stdlib_compiler_flags,
+	link_args: stdlib_link_flags + ['-L' + libcxx_output_dir + '/lib', '-lc++'],
 )

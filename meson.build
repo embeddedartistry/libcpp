@@ -92,7 +92,7 @@ libcxx_args = [
 	'-DLIBCXX_INCLUDE_DOCS=OFF',
 	'-DLIBCXX_INCLUDE_BENCHMARKS=OFF',
 	'-DCMAKE_INSTALL_PREFIX=' + meson.build_root(),
-	'-DLLVM_LIBRARY_OUTPUT_INTDIR=' + meson.build_root(),
+	#'-DLLVM_LIBRARY_OUTPUT_INTDIR=' + meson.build_root(),
 	#'-DLLVM_BINARY_DIR=' + meson.build_root(),
 	#'-DLIBCXX_CXX_ABI=none'
 ]

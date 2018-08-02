@@ -135,7 +135,7 @@ libcxxabi_build = custom_target(
 )
 
 libcxxabi_dep = declare_dependency(
-	include_directories: include_directories('libcxxabi/include'),
+	include_directories: include_directories('libcxxabi/include', is_system: true),
 	compile_args: stdlib_compiler_flags,
 	link_args: stdlib_link_flags + ['-L' + libcxxabi_output_dir + '/lib', '-lc++abi'],
 )
@@ -249,12 +249,12 @@ libcxx_full_build = custom_target(
 
 libcxx_full_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	include_directories: include_directories('libcxx/include'),
+	include_directories: include_directories('libcxx/include', is_system: true),
 	compile_args: stdlib_compiler_flags,
 	link_args: stdlib_link_flags + ['-L' + libcxx_output_dir + '/lib', '-lc++'],
 )
 
 libcxx_headeronly_dep = declare_dependency(
-	include_directories: include_directories('libcxx/include'),
+	include_directories: include_directories('libcxx/include', is_system: true),
 	compile_args: stdlib_compiler_flags,
 )

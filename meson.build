@@ -158,6 +158,9 @@ libcxx_args = [
 	'-DLIBCXX_CXX_ABI=libcxxabi',
 	'-DLIBCXX_CXX_ABI_INCLUDE_PATHS=' + libcxx_include,
 	'-DLIBCXX_CXX_ABI_LIBRARY_PATH='+	libcxx_output_dir + '/lib',
+
+	# We want to preserve the configuration settings in the __config header
+	'-DLIBCXX_NEEDS_SITE_CONFIG=ON',
 ]
 
 if use_compiler_rt == true
@@ -247,14 +250,15 @@ libcxx_full_build = custom_target(
 	build_by_default: true
 )
 
+libcxx_include_arg = ['-isystem', meson.build_root() + '/include/c++/v1']
+
 libcxx_full_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	include_directories: include_directories('libcxx/include', is_system: true),
-	compile_args: stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + libcxx_include_arg,
 	link_args: stdlib_link_flags + ['-L' + libcxx_output_dir + '/lib', '-lc++'],
 )
 
 libcxx_headeronly_dep = declare_dependency(
-	include_directories: include_directories('libcxx/include', is_system: true),
-	compile_args: stdlib_compiler_flags,
+	sources: libcxx_full_build[2],
+	compile_args: stdlib_compiler_flags + libcxx_include_arg,
 )

@@ -1,5 +1,5 @@
 option('disable-rtti', type : 'boolean', value: true)
-option('disable-exceptions', type : 'boolean', value: true)
+option('disable-exceptions', type : 'boolean', value: false)
 option('enable-pedantic-error', type: 'boolean', value: false)
 option('enable-werror', type: 'boolean', value: false)
 option('use-compiler-rt', type: 'boolean', value: false)

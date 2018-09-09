@@ -21,9 +21,10 @@ BUILDRESULTS?=buildresults
 
 all: buildall
 
+.PHONY: groundwork
 groundwork:
-	$(Q) mkdir -p $(BUILDRESULTS)
-	$(Q) meson $(BUILDRESULTS)
+	$(Q)if [ -d "$(BUILDRESULTS)" ]; then mkdir -p $(BUILDRESULTS); fi
+	$(Q)if [ ! -e "$(BUILDRESULTS)/build.ninja" ]; then meson --buildtype plain $(BUILDRESULTS); fi
 
 .PHONY: buildall
 buildall: groundwork

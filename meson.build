@@ -247,7 +247,6 @@ libcxx_full_build = custom_target(
 	input: [libcxxabi_build, libcxx_cmake],
 	output: ['libc++.a', 'libc++experimental.a', 'include'],
 	command: ['make', '-C', libcxx_output_dir, 'install'],
-	build_by_default: true
 )
 
 libcxx_include_arg = ['-isystem', meson.build_root() + '/include/c++/v1']

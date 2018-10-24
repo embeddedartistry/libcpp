@@ -161,6 +161,9 @@ libcxx_args = [
 
 	# We want to preserve the configuration settings in the __config header
 	'-DLIBCXX_NEEDS_SITE_CONFIG=ON',
+
+	# TODO: Only include this in host builds. Need some way of selecting threading library
+	'-DLIBCXX_HAS_PTHREAD_API=ON'
 ]
 
 if use_compiler_rt == true

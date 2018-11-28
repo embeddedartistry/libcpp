@@ -262,5 +262,5 @@ libcxx_full_dep = declare_dependency(
 
 libcxx_headeronly_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	compile_args: stdlib_compiler_flags + libcxx_include_arg,
+	compile_args: stdlib_compiler_flags + libcxx_include_arg + ['-D_LIBCPP_DISABLE_EXTERN_TEMPLATE'],
 )

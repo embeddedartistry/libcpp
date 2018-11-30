@@ -146,6 +146,8 @@ libcxxabi_dep = declare_dependency(
 
 libcxx_output_dir = meson.build_root() + '/libcxx'
 
+libcxx_compile_args = []
+
 libcxx_args = [
 	#'-DLIBCXX_STANDALONE_BUILD=ON',
 	'-DLIBCXX_ENABLE_SHARED=OFF',
@@ -180,6 +182,7 @@ endif
 
 if build_type == 'release'
 	libcxx_args += '-DCMAKE_BUILD_TYPE=Release'
+	libcxx_compile_args += '-D_LIBCPP_DISABLE_ADDITIONAL_DIAGNOSTICS'
 endif
 
 if enable_werror == true
@@ -256,11 +259,11 @@ libcxx_include_arg = ['-isystem', meson.build_root() + '/include/c++/v1']
 
 libcxx_full_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	compile_args: stdlib_compiler_flags + libcxx_include_arg,
+	compile_args: stdlib_compiler_flags + libcxx_include_arg + libcxx_compile_args,
 	link_args: stdlib_link_flags + ['-L' + libcxx_output_dir + '/lib', '-lc++'],
 )
 
 libcxx_headeronly_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	compile_args: stdlib_compiler_flags + libcxx_include_arg + ['-D_LIBCPP_DISABLE_EXTERN_TEMPLATE'],
+	compile_args: stdlib_compiler_flags + libcxx_include_arg + ['-D_LIBCPP_DISABLE_EXTERN_TEMPLATE'] + libcxx_compile_args,
 )

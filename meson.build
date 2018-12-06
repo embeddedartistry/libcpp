@@ -267,3 +267,9 @@ libcxx_headeronly_dep = declare_dependency(
 	sources: libcxx_full_build[2],
 	compile_args: stdlib_compiler_flags + libcxx_include_arg + ['-D_LIBCPP_DISABLE_EXTERN_TEMPLATE'] + libcxx_compile_args,
 )
+
+libcxx_header_include_dep = declare_dependency(
+	sources: libcxx_full_build[2],
+	include_directories: include_directories('libcxxabi/include', is_system: true),
+	compile_args: libcxx_include_arg + stdlib_compiler_flags + libcxx_compile_args
+)

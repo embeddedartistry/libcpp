@@ -256,20 +256,27 @@ libcxx_full_build = custom_target(
 )
 
 libcxx_include_arg = ['-isystem', meson.build_root() + '/include/c++/v1']
+libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
+libcxx_include_directories = [
+	include_directories('libcxxabi/include', is_system: true),
+	libcxx_extensions_include_dir
+	]
 
 libcxx_full_dep = declare_dependency(
 	sources: libcxx_full_build[2],
+	include_directories: libcxx_include_directories,
 	compile_args: stdlib_compiler_flags + libcxx_include_arg + libcxx_compile_args,
 	link_args: stdlib_link_flags + ['-L' + libcxx_output_dir + '/lib', '-lc++'],
 )
 
 libcxx_headeronly_dep = declare_dependency(
 	sources: libcxx_full_build[2],
+	include_directories: libcxx_include_directories,
 	compile_args: stdlib_compiler_flags + libcxx_include_arg + ['-D_LIBCPP_DISABLE_EXTERN_TEMPLATE'] + libcxx_compile_args,
 )
 
 libcxx_header_include_dep = declare_dependency(
 	sources: libcxx_full_build[2],
-	include_directories: include_directories('libcxxabi/include', is_system: true),
-	compile_args: libcxx_include_arg + stdlib_compiler_flags + libcxx_compile_args
+	include_directories: libcxx_include_directories,
+	compile_args: libcxx_include_arg + libcxx_compile_args
 )

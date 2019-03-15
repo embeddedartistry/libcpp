@@ -401,14 +401,6 @@ if enable_monotonic_clock == false and enable_threads == false
 endif
 
 if meson.is_cross_build()
-	cpp_args = meson.get_cross_property('cpp_args')
-	cpp_link_args = meson.get_cross_property('cpp_link_args')
-
-	libcxxabi_cross_args += cpp_args
-	libcxx_cross_args += cpp_args
-	libcxxabi_cross_link_args += cpp_link_args
-	libcxx_cross_link_args += cpp_link_args
-
 	libcxx_cross_args += '-D_BAREMETAL'
 	libcxxabi_cross_args += '-DLIBCXXABI_BAREMETAL'
 endif

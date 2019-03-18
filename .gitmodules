@@ -7,3 +7,6 @@
 [submodule "build"]
 	path = build
 	url = git@github.com:embeddedartistry/meson-buildsystem.git
+[submodule "embedded-unwind"]
+	path = embedded-unwind
+	url = git@github.com:embeddedartistry/embedded-unwind.git

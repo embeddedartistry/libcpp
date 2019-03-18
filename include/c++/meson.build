@@ -10,6 +10,28 @@ configure_file(
 	configuration: libcxx_conf_data,
 )
 
+external_threading_header_dep = []
+
+if thread_library == 'freertos'
+
+	freertos_external_threading_header = configure_file(
+		input: 'external_threading/__external_threading_freertos',
+		output: '__external_threading',
+		copy: true
+	)
+
+elif thread_library == 'threadx'
+
+	threadx_external_threading_header = configure_file(
+		input: 'external_threading/__external_threading_threadx',
+		output: '__external_threading',
+		copy: true
+	)
+
+elif thread_library == 'ea-framework'
+	 #TODO
+endif
+
 libcpp_config_headers = files(
   meson.current_build_dir() + '/__libcpp_config_site',
   '../../libcxx/include/__config'

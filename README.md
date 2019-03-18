@@ -36,6 +36,12 @@ You can enable cross-compilation using the `--cross-file` arg when creating a ne
 meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-enable-threads=false -Duse-ea-libc=true
 ```
 
+You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:
+
+```
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-ea-libc=true -Dos-header-path=../../os/threadx/include
+```
+
 ### Using libcpp as a meson subproject
 
 You can use libcpp as a subproject inside of another `meson` project. Include this project with the `subproject` command:

@@ -16,7 +16,8 @@ project('libcpp',
 cat = find_program('cat')
 cmake_prep = find_program('build/scripts/prepare_cmake.sh')
 mkdir = find_program('mkdir')
-libthread = dependency('threads')
+libthread = dependency('threads', required: false)
+libthread_native = dependency('threads', native: true, required: false)
 
 build_type = get_option('buildtype')
 
@@ -50,6 +51,8 @@ default_newdelete = get_option('libcxx-default-newdelete')
 enable_monotonic_clock = get_option('libcxx-monotonic-clock')
 force_32_bit = get_option('force-32-bit')
 enable_chrono = get_option('libcxx-enable-chrono')
+thread_library = get_option('libcxx-thread-library')
+os_header_path = get_option('os-header-path')
 
 # The default terminate handler attempts to demangle uncaught exceptions, which
 # causes extra I/O and demangling code to be pulled in.
@@ -113,6 +116,9 @@ libcxxabi_link_args = [
 libcxxabi_cross_args = []
 libcxxabi_native_args = []
 libcxxabi_cross_link_args = []
+libcxxabi_native_dependencies = []
+libcxxabi_target_dependencies = []
+libcxxabi_include_directories = []
 
 libcxx_warning_flags = [
 	'-Wall',
@@ -144,6 +150,9 @@ libcxx_link_args = [
 libcxx_cross_args = []
 libcxx_native_args = []
 libcxx_cross_link_args = []
+libcxx_native_dependencies = []
+libcxx_target_dependencies = []
+libcxx_include_directories = []
 
 libc_target_include_directories = []
 libc_native_include_directories = []
@@ -245,7 +254,7 @@ libcpp_core_files += files(
 	'libcxx/src/stdexcept.cpp',
 	'libcxx/src/strstream.cpp',
 	'libcxx/src/system_error.cpp',
-	'libcxx/src/thread.cpp',
+	'src/c++/thread.cpp',
 	'libcxx/src/typeinfo.cpp',
 	'libcxx/src/utility.cpp',
 	'libcxx/src/valarray.cpp',
@@ -422,8 +431,46 @@ endif
 
 if enable_threads == true
 
-	if libthread.found()
-		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_PTHREAD', true)
+	assert(not ((thread_library == '') or (thread_library == 'none')),
+		'Supply thread library if enable_threads is used')
+
+	if thread_library == 'pthread'
+		if libthread.found()
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_PTHREAD', true)
+			libcxxabi_target_dependencies += libthread
+			libcxx_target_dependencies += libthread
+
+			if libthread_native.found()
+				libcxxabi_native_dependencies += libthread_native
+				libcxx_native_dependencies += libthread_native
+			endif
+		endif
+	elif thread_library != 'ea-framework'
+		# If we aren't using pthreads, use an external header
+		assert(not (has_external_threading == true and build_external_threading == true),
+		'Cannot select both has_esxternal_threading and build_external_threading. Pick one.')
+
+		if has_external_threading == false and build_external_threading == false
+			message('A non-pthread OS was selected. Enabling external threading header support.')
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
+			has_external_threading = true
+		elif has_external_threading == true
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
+		elif build_external_threading == true
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL', true)
+		endif
+
+		if os_header_path == ''
+			message('If the build fails, please set os-header-path so the buidl can find your includes')
+		else
+			libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
+			libcxx_include_directories += include_directories(os_header_path, is_system: true)
+		endif
+
+		message('Enabling pthread support for native C++ library since an RTOS was selected')
+		libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+		libcxx_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+		host_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
 	endif
 
 	if host_os != 'darwin' and host_os != 'windows'
@@ -437,22 +484,6 @@ if enable_threads == true
 		libcxxabi_native_files += files(
 			'libcxxabi/src/cxa_thread_atexit.cpp',
 		)
-	endif
-
-	assert(not (has_external_threading == true and build_external_threading == true),
-		'Cannot select both has_esxternal_threading and build_external_threading. Pick one.')
-
-	if has_external_threading == true
-		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
-	endif
-
-	if build_external_threading == true
-		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL', true)
-	endif
-
-	if enable_threads and not has_external_threading and not build_external_threading and not libthread.found()
-		message('Enabling external threading header because threading is enabled and pthreads is not present.')
-		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
 	endif
 else
 	message('Building without threading support.')
@@ -498,12 +529,12 @@ subdir('include')
 
 # gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
 if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
-	libcxxabi_includes = [
+	libcxxabi_include_directories += [
 		include_directories('include/c++abi/'),
 		include_directories('include/c++/')
 	]
 else
-	libcxxabi_includes = [
+	libcxxabi_include_directories += [
 		include_directories('include/c++abi/', is_system: true),
 		include_directories('include/c++/', is_system: true)
 	]
@@ -511,19 +542,19 @@ endif
 
 libcxxabi = static_library('c++abi',
     libcxxabi_files,
-    include_directories: libcxxabi_includes + libc_target_include_directories,
+    include_directories: libcxxabi_include_directories + libc_target_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_cross_args,
     link_args: libcxxabi_link_args + libcxxabi_cross_link_args + ['-lunwind'],
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxxabi_target_dependencies],
     pic: true
 )
 
 libcxxabi_native = static_library('c++abi_native',
     libcxxabi_files,
-    include_directories: libcxxabi_includes + libc_native_include_directories,
+    include_directories: libcxxabi_include_directories + libc_native_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_native_args,
     link_args: libcxxabi_link_args + ['-lunwind'],
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxxabi_native_dependencies],
     native: true,
     pic: true
 )
@@ -538,7 +569,7 @@ libcxxabi_dep = declare_dependency(
 libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
 	link_args: stdlib_link_flags
 )
 
@@ -549,14 +580,14 @@ libcxxabi_native_dep = declare_dependency(
 # gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
 if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
 	libcxx_extensions_include_dir = include_directories('extensions')
-	libcxx_include_directories = [
+	libcxx_include_directories += [
 		include_directories('include/c++abi'),
 		include_directories('include/c++'),
 		libcxx_extensions_include_dir
 	]
 else
 	libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
-	libcxx_include_directories = [
+	libcxx_include_directories += [
 		include_directories('include/c++abi', is_system: true),
 		include_directories('include/c++', is_system: true),
 		libcxx_extensions_include_dir
@@ -568,7 +599,7 @@ libcpp = static_library('c++',
     cpp_args: libcxx_compile_args + libcxx_cross_args,
     include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
 )
 
 libcpp_experimental = static_library('c++experimental',
@@ -576,7 +607,7 @@ libcpp_experimental = static_library('c++experimental',
     cpp_args: libcxx_compile_args + libcxx_cross_args,
     include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
 )
 
 libcpp_native = static_library('c++_native',
@@ -584,7 +615,7 @@ libcpp_native = static_library('c++_native',
     cpp_args: libcxx_compile_args + libcxx_native_args,
     include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
     native: true
 )
 
@@ -593,7 +624,7 @@ libcpp_experimental_native = static_library('c++experimental_native',
     cpp_args: libcxx_compile_args + libcxx_native_args,
     include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
     native: true
 )
 
@@ -603,7 +634,7 @@ if enable_filesystem == true
 		cpp_args: libcxx_compile_args + libcxx_cross_args,
 		include_directories: libc_target_include_directories + libcxx_include_directories,
 		link_args: libcxx_link_args + libcxx_cross_link_args,
-		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
 	)
 
 	libcpp_fs_native = static_library('c++fs_native',
@@ -611,7 +642,7 @@ if enable_filesystem == true
 		cpp_args: libcxx_compile_args + libcxx_native_args,
 		include_directories: libc_native_include_directories + libcxx_include_directories,
 		link_args: libcxx_link_args,
-		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
 		native: true
 	)
 else
@@ -639,7 +670,7 @@ libcxx_filesystem_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: libcpp_fs_native,
 	dependencies: [install_cpp_headers_dep],
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
 	link_args: stdlib_link_flags
 )
 
@@ -655,7 +686,7 @@ libcxx_full_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: [libcpp_native, libcpp_experimental_native],
 	dependencies: [install_cpp_headers_dep],
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
 	link_args: stdlib_link_flags
 )
 

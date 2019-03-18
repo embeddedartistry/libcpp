@@ -381,7 +381,19 @@ locale::operator()(const basic_string<_CharT, _Traits, _Allocator>& __x,
 class _LIBCPP_TYPE_VIS ctype_base
 {
 public:
-#if defined(__GLIBC__)
+#if defined (_BAREMETAL)
+    typedef uint32_t mask;
+    static const mask space  = _CTYPE_S;
+    static const mask print  = _CTYPE_R;
+    static const mask cntrl  = _CTYPE_C;
+    static const mask upper  = _CTYPE_U;
+    static const mask lower  = _CTYPE_L;
+    static const mask alpha  = _CTYPE_A;
+    static const mask digit  = _CTYPE_D;
+    static const mask punct  = _CTYPE_P;
+    static const mask xdigit = _CTYPE_X;
+    static const mask blank  = _CTYPE_B;
+#elif defined(__GLIBC__)
     typedef unsigned short mask;
     static const mask space  = _ISspace;
     static const mask print  = _ISprint;

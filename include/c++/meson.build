@@ -28,6 +28,7 @@ generate_libpp_config_header = custom_target(
 
 libcpp_install_headers = files(
 	'../../libcxx/include/__bit_reference',
+	'__baremetal_locale_fallbacks.hpp',
 	'../../libcxx/include/__bsd_locale_defaults.h',
 	'../../libcxx/include/__bsd_locale_fallbacks.h',
 	'../../libcxx/include/__errc',
@@ -108,7 +109,7 @@ libcpp_install_headers = files(
 	'../../libcxx/include/limits',
 	'../../libcxx/include/limits.h',
 	'../../libcxx/include/list',
-	'../../libcxx/include/locale',
+	'locale',
 	'../../libcxx/include/locale.h',
 	'../../libcxx/include/map',
 	'../../libcxx/include/math.h',

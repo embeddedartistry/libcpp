@@ -33,7 +33,7 @@ $ ninja
 You can enable cross-compilation using the `--cross-file` arg when creating a new repository. This example uses `arm-none-eabi-c++` to compile `libcxx` and `libcxxabi` with the [Embedded Artistry libc](https://github.com/embeddedartistry/libc).
 
 ```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-enable-threads=false -Duse-ea-libc=true
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Denable-threading=false -Duse-ea-libc=true
 ```
 
 You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:

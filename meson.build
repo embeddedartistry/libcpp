@@ -42,7 +42,7 @@ enable_werror = get_option('enable-werror')
 enable_pedantic_error = get_option('enable-pedantic-error')
 always_use_assert = get_option('always-enable-assert')
 use_llvm_libunwind = get_option('use-llvm-libunwind')
-enable_threads = get_option('libcxx-enable-threads')
+enable_threads = get_option('enable-threading')
 has_external_threading = get_option('libcxx-has-external-thread-api')
 build_external_threading = get_option('libcxx-build-external-thread-api')
 enable_filesystem = get_option('libcxx-enable-filesystem')
@@ -307,7 +307,8 @@ if use_ea_libc == true
 	]
 
 	libcxxabi_compile_args += ['-D_POSIX_MEMALIGN_VISIBLE', '-DLIBCXXABI_USE_LLVM_UNWINDER']
-	libcxx_compile_args += ['-D_BAREMETAL', '-D_POSIX_MEMALIGN_VISIBLE']
+	libcxx_compile_args += ['-D_POSIX_MEMALIGN_VISIBLE']
+	libcxx_conf_data.set('_BAREMETAL', true)
 
 	libcxxabi_files += files(
 		'src/c++abi/cxa_demangle.cpp',
@@ -363,13 +364,15 @@ endif
 
 if disable_exceptions == true
 	libcxxabi_compile_args += ['-D_LIBCXXABI_NO_EXCEPTIONS', '-fno-exceptions']
-	libcxx_compile_args += ['-D_LIBCPP_NO_EXCEPTIONS', '-fno-exceptions']
+	libcxx_compile_args += ['-fno-exceptions']
+	libcxx_conf_data.set('_LIBCPP_NO_EXCEPTIONS', true)
 else
 	libcxxabi_compile_args += ['-funwind-tables']
 endif
 
 if disable_rtti == true
-	libcxx_compile_args += ['-D_LIBCPP_NO_RTTI', '-fno-rtti']
+	libcxx_compile_args += ['-fno-rtti']
+	libcxx_conf_data.set('_LIBCPP_NO_RTTI', true)
 endif
 
 if enable_stdinout == false
@@ -497,8 +500,8 @@ if enable_monotonic_clock == false and enable_threads == false
 endif
 
 if meson.is_cross_build()
-	libcxx_cross_args += '-D_BAREMETAL'
 	libcxxabi_cross_args += '-DLIBCXXABI_BAREMETAL'
+	libcxx_conf_data.set('_BAREMETAL', true)
 endif
 
 if force_32_bit == true
@@ -563,14 +566,14 @@ libcxxabi_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
-	link_args: stdlib_link_flags
+	link_args: stdlib_link_flags + ['-Wl,-U,___cxa_thread_atexit_impl']
 )
 
 libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
-	link_args: stdlib_link_flags
+	link_args: stdlib_link_flags + ['-Wl,-U,___cxa_thread_atexit_impl']
 )
 
 ################

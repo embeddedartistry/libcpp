@@ -28,6 +28,9 @@
 #mesondefine _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 #mesondefine _LIBCPP_NO_VCRUNTIME
 #mesondefine _LIBCPP_ABI_NAMESPACE
+#mesondefine _LIBCPP_NO_RTTI
+#mesondefine _LIBCPP_NO_EXCEPTIONS
+#mesondefine _BAREMETAL
 
 // Not supported: @ _LIBCPP_ABI_DEFINES@
 

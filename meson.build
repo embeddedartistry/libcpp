@@ -32,6 +32,8 @@ target_compiler = meson.get_compiler('cpp')
 # Process Build Options #
 #########################
 
+use_ea_libc = get_option('use-ea-libc')
+ea_libc_path = get_option('ea-libc-path')
 disable_rtti = get_option('disable-rtti')
 disable_exceptions = get_option('disable-exceptions')
 use_compiler_rt = get_option('use-compiler-rt')
@@ -99,7 +101,9 @@ libcxxabi_compile_args = [
 	'-D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS',
 	'-nodefaultlibs',
 	'-nostdinc++',
-	'-D_LIBCXXABI_BUILDING_LIBRARY'
+	'-D_LIBCXXABI_BUILDING_LIBRARY',
+	# STL needs GNU functions to compile/link
+	'-D_GNU_SOURCE',
 ] + libcxxabi_warning_flags
 
 libcxxabi_link_args = [
@@ -129,6 +133,8 @@ libcxx_compile_args = [
 	'-D_LIBCPP_BUILDING_LIBRARY',
 	'-D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER',
 	'-DLIBCXX_BUILDING_LIBCXXABI',
+	# STL needs GNU functions to compile/link
+	'-D_GNU_SOURCE',
 ] + libcxx_warning_flags
 
 libcxx_link_args = [
@@ -138,6 +144,9 @@ libcxx_link_args = [
 libcxx_cross_args = []
 libcxx_native_args = []
 libcxx_cross_link_args = []
+
+libc_target_include_directories = []
+libc_native_include_directories = []
 
 ###########################
 # Check Compiler Settings #
@@ -199,10 +208,8 @@ libcxxabi_files = []
 libcxxabi_native_files = []
 
 libcxxabi_files += files(
-	'libcxxabi/src/abort_message.cpp',
 	'libcxxabi/src/cxa_aux_runtime.cpp',
 	'libcxxabi/src/cxa_default_handlers.cpp',
-	'libcxxabi/src/cxa_demangle.cpp',
 	'libcxxabi/src/cxa_exception_storage.cpp',
 	'libcxxabi/src/cxa_guard.cpp',
 	'libcxxabi/src/cxa_handlers.cpp',
@@ -224,23 +231,18 @@ libcpp_core_files += files(
 	'libcxx/src/bind.cpp',
 	'libcxx/src/charconv.cpp',
 	'libcxx/src/condition_variable.cpp',
-	'libcxx/src/debug.cpp',
 	'libcxx/src/exception.cpp',
 	'libcxx/src/functional.cpp',
 	'libcxx/src/future.cpp',
 	'libcxx/src/hash.cpp',
 	'libcxx/src/ios.cpp',
-	'libcxx/src/iostream.cpp',
-	'libcxx/src/locale.cpp',
 	'libcxx/src/memory.cpp',
 	'libcxx/src/mutex.cpp',
 	'libcxx/src/new.cpp',
 	'libcxx/src/optional.cpp',
-	'libcxx/src/random.cpp',
 	'libcxx/src/regex.cpp',
 	'libcxx/src/shared_mutex.cpp',
 	'libcxx/src/stdexcept.cpp',
-	'libcxx/src/string.cpp',
 	'libcxx/src/strstream.cpp',
 	'libcxx/src/system_error.cpp',
 	'libcxx/src/thread.cpp',
@@ -267,6 +269,69 @@ libcpp_filesystem_files += files(
 ################################
 # Apply Project Option Changes #
 ################################
+
+if use_ea_libc == true
+	message('Compiling with Embedded Artistry libc')
+	message('Looking for libc at location: ' + ea_libc_path +
+		'.  If libc is not found, update the ea-libc-path configuration option.')
+	# TODO: can we check for a file to confirm?
+
+	subdir('build/architecture')
+	message('Building C++ for target architecture: ' + target_architecture)
+	libc_target_include_directories += [
+		include_directories(ea_libc_path + '/include', is_system: true),
+		include_directories(ea_libc_path + '/printf', is_system: true),
+		include_directories(ea_libc_path + '/openlibm/include', is_system: true),
+		include_directories(ea_libc_path + '/openlibm/src', is_system: true),
+		include_directories(ea_libc_path + '/arch/' + target_architecture + '/include', is_system: true),
+		include_directories('embedded-unwind/include', is_system: true)
+	]
+
+	message('Building C++ for native architecture: ' + host_architecture)
+	libc_native_include_directories += [
+		include_directories(ea_libc_path + '/include', is_system: true),
+		include_directories(ea_libc_path + '/printf', is_system: true),
+		include_directories(ea_libc_path + '/openlibm/include', is_system: true),
+		include_directories(ea_libc_path + '/openlibm/src', is_system: true),
+		include_directories(ea_libc_path + '/arch/' + host_architecture + '/include', is_system: true),
+		include_directories('embedded-unwind/include', is_system: true)
+	]
+
+	libcxxabi_compile_args += ['-D_POSIX_MEMALIGN_VISIBLE', '-DLIBCXXABI_USE_LLVM_UNWINDER']
+	libcxx_compile_args += ['-D_BAREMETAL', '-D_POSIX_MEMALIGN_VISIBLE']
+
+	libcxxabi_files += files(
+		'src/c++abi/cxa_demangle.cpp',
+		'src/c++abi/abort_message.cpp',
+	)
+
+	libcpp_core_files += files(
+		'src/c++/debug.cpp',
+		'src/c++/locale.cpp',
+		'src/c++/string.cpp',
+		'src/c++/random.cpp',
+	)
+
+	# TODO: build Unwind-sjlj_pthread.c
+	libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
+
+	message('iostreams are not supported with EA libc')
+	message('locale is not supported with EA libc')
+else
+	message('Compiling with the compiler or sysroot libc headers')
+	libcxxabi_files += files(
+		'libcxxabi/src/cxa_demangle.cpp',
+		'libcxxabi/src/abort_message.cpp',
+	)
+
+	libcpp_core_files += files(
+		'libcxx/src/debug.cpp',
+		'libcxx/src/iostream.cpp',
+		'libcxx/src/locale.cpp',
+		'libcxx/src/random.cpp',
+		'libcxx/src/string.cpp',
+	)
+endif
 
 if build_type == 'release'
 	libcxx_compile_args += '-D_LIBCPP_DISABLE_ADDITIONAL_DIAGNOSTICS'
@@ -446,7 +511,7 @@ endif
 
 libcxxabi = static_library('c++abi',
     libcxxabi_files,
-    include_directories: libcxxabi_includes,
+    include_directories: libcxxabi_includes + libc_target_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_cross_args,
     link_args: libcxxabi_link_args + libcxxabi_cross_link_args + ['-lunwind'],
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
@@ -455,7 +520,7 @@ libcxxabi = static_library('c++abi',
 
 libcxxabi_native = static_library('c++abi_native',
     libcxxabi_files,
-    include_directories: libcxxabi_includes,
+    include_directories: libcxxabi_includes + libc_native_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_native_args,
     link_args: libcxxabi_link_args + ['-lunwind'],
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
@@ -501,7 +566,7 @@ endif
 libcpp = static_library('c++',
     libcpp_core_files,
     cpp_args: libcxx_compile_args + libcxx_cross_args,
-    include_directories: libcxx_include_directories,
+    include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
 )
@@ -509,7 +574,7 @@ libcpp = static_library('c++',
 libcpp_experimental = static_library('c++experimental',
     libcpp_experimental_files,
     cpp_args: libcxx_compile_args + libcxx_cross_args,
-    include_directories: libcxx_include_directories,
+    include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
 )
@@ -517,7 +582,7 @@ libcpp_experimental = static_library('c++experimental',
 libcpp_native = static_library('c++_native',
     libcpp_core_files,
     cpp_args: libcxx_compile_args + libcxx_native_args,
-    include_directories: libcxx_include_directories,
+    include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
     native: true
@@ -526,7 +591,7 @@ libcpp_native = static_library('c++_native',
 libcpp_experimental_native = static_library('c++experimental_native',
     libcpp_experimental_files,
     cpp_args: libcxx_compile_args + libcxx_native_args,
-    include_directories: libcxx_include_directories,
+    include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
     native: true
@@ -534,20 +599,20 @@ libcpp_experimental_native = static_library('c++experimental_native',
 
 if enable_filesystem == true
 	libcpp_fs = static_library('c++fs',
-	    libcpp_filesystem_files,
-	    cpp_args: libcxx_compile_args + libcxx_cross_args,
-    	include_directories: libcxx_include_directories,
-	    link_args: libcxx_link_args + libcxx_cross_link_args,
-	    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+		libcpp_filesystem_files,
+		cpp_args: libcxx_compile_args + libcxx_cross_args,
+		include_directories: libc_target_include_directories + libcxx_include_directories,
+		link_args: libcxx_link_args + libcxx_cross_link_args,
+		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
 	)
 
 	libcpp_fs_native = static_library('c++fs_native',
-	    libcpp_filesystem_files,
-	    cpp_args: libcxx_compile_args + libcxx_native_args,
-    	include_directories: libcxx_include_directories,
-	    link_args: libcxx_link_args,
-	    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
-	    native: true
+		libcpp_filesystem_files,
+		cpp_args: libcxx_compile_args + libcxx_native_args,
+		include_directories: libc_native_include_directories + libcxx_include_directories,
+		link_args: libcxx_link_args,
+		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep],
+		native: true
 	)
 else
 	libcpp_fs = disabler()

@@ -103,7 +103,6 @@ libcxxabi_compile_args = [
 	'-D_LIBCPP_DISABLE_EXTERN_TEMPLATE',
 	'-D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS',
 	'-nodefaultlibs',
-	'-nostdinc++',
 	'-D_LIBCXXABI_BUILDING_LIBRARY',
 	# STL needs GNU functions to compile/link
 	'-D_GNU_SOURCE',
@@ -133,7 +132,6 @@ libcxx_warning_flags = [
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
 libcxx_compile_args = [
-	'-nostdinc++',
 	'-fvisibility-inlines-hidden',
 	'-D_LIBCPP_BUILD_STATIC',
 	'-D_LIBCPP_BUILDING_LIBRARY',
@@ -323,7 +321,8 @@ if use_ea_libc == true
 	)
 
 	# TODO: build Unwind-sjlj_pthread.c
-	libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
+	libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__', '-nostdinc']
+	libcxx_cross_args += ['-nostdinc']
 
 	message('iostreams are not supported with EA libc')
 	message('locale is not supported with EA libc')
@@ -341,6 +340,9 @@ else
 		'libcxx/src/random.cpp',
 		'libcxx/src/string.cpp',
 	)
+
+	libcxx_compile_args += ['-nostdinc++']
+	libcxxabi_compile_args += ['-nostdinc++']
 endif
 
 if build_type == 'release'

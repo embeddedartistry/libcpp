@@ -1,5 +1,8 @@
 # C++ header install meson.build
 
+mkdir = find_program('mkdir')
+cp = find_program('cp')
+
 ### Generate and Install Config Header ###
 
 subdir('support')
@@ -9,6 +12,22 @@ configure_file(
 	output: '__libcpp_config_site',
 	configuration: libcxx_conf_data,
 )
+
+libcpp_config_headers = files(
+  meson.current_build_dir() + '/__libcpp_config_site',
+  '../../libcxx/include/__config'
+)
+
+generate_libpp_config_header = custom_target(
+  'generate_libpp_config_header',
+  command: [ 'cat', '@INPUT@' ],
+  capture: true,
+  input: libcpp_config_headers,
+  output: '__config',
+)
+
+
+### Handle Threading Headers ###
 
 external_threading_header_dep = []
 
@@ -31,20 +50,6 @@ elif thread_library == 'threadx'
 elif thread_library == 'ea-framework'
 	 #TODO
 endif
-
-libcpp_config_headers = files(
-  meson.current_build_dir() + '/__libcpp_config_site',
-  '../../libcxx/include/__config'
-)
-
-generate_libpp_config_header = custom_target(
-  'generate_libpp_config_header',
-  command: [ 'cat', '@INPUT@' ],
-  capture: true,
-  input: libcpp_config_headers,
-  output: '__config',
-  build_by_default: true
-)
 
 ### Install C++ Headers ###
 
@@ -222,46 +227,28 @@ libcpp_install_ext_headers = files(
 
 install_cpp_headers = custom_target('install-cpp-headers',
 	input: libcpp_install_headers,
-	output: 'libcpp_install_headers',
+	output: '__baremetal_locale_fallbacks.hpp',
 	command: [
-		'cp', '@INPUT@', meson.current_build_dir()
+		cp, '@INPUT@', meson.current_build_dir()
 	],
-	build_always_stale: true,
-	#build_by_default: true
-)
-
-create_cpp_experimental_include_dir = custom_target('create_cpp_experimental_include_dir',
-	input: [],
-	output: 'experimental_dir',
-	command: ['mkdir', '-p', meson.current_build_dir() + '/' + 'experimental'],
 )
 
 install_cpp_experimental_headers = custom_target('install-cpp-experimental-headers',
 	input: libcpp_install_experimental_headers,
-	output: 'experimental_files',
+	output: 'experimental',
 	command: [
-		'cp', '@INPUT@', meson.current_build_dir() + '/' + 'experimental'
+		mkdir, '-p', meson.current_build_dir() + '/' + 'experimental', '&&',
+		cp, '@INPUT@', meson.current_build_dir() + '/' + 'experimental'
 	],
-	build_always_stale: true,
-	#build_by_default: true,
-	depends: create_cpp_experimental_include_dir
-)
-
-create_cpp_ext_include_dir = custom_target('create_cpp_ext_include_dir',
-	input: [],
-	output: 'ext_dir',
-	command: ['mkdir', '-p', meson.current_build_dir() + '/' + 'ext'],
 )
 
 install_cpp_ext_headers = custom_target('install-cpp-ext-headers',
 	input: libcpp_install_ext_headers,
-	output: 'ext_files',
+	output: 'ext',
 	command: [
-		'cp', '@INPUT@', meson.current_build_dir() + '/' + 'experimental'
+		mkdir, '-p', meson.current_build_dir() + '/' + 'ext', '&&',
+		cp, '@INPUT@', meson.current_build_dir() + '/' + 'ext'
 	],
-	build_always_stale: true,
-	#build_by_default: true,
-	depends: create_cpp_ext_include_dir
 )
 
 install_cpp_headers_dep = declare_dependency(

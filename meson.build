@@ -321,8 +321,11 @@ if use_ea_libc == true
 	)
 
 	# TODO: build Unwind-sjlj_pthread.c
-	libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__', '-nostdinc']
-	libcxx_cross_args += ['-nostdinc']
+	if target_architecture == 'arm'
+		libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
+		libcxxabi_cross_args += ['-nostdinc']
+		libcxx_cross_args += ['-nostdinc']
+	endif
 
 	message('iostreams are not supported with EA libc')
 	message('locale is not supported with EA libc')
@@ -568,7 +571,7 @@ libcxxabi_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
-	link_args: stdlib_link_flags + ['-Wl,-U,___cxa_thread_atexit_impl']
+	link_args: stdlib_link_flags #+ ['-Wl,-U,___cxa_thread_atexit_impl']
 )
 
 libcxxabi_native_dep = declare_dependency(

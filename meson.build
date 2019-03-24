@@ -325,8 +325,8 @@ if use_ea_libc == true
 	# TODO: build Unwind-sjlj_pthread.c
 	if target_architecture == 'arm'
 		libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
-		libcxxabi_cross_args += ['-nostdinc']
-		libcxx_cross_args += ['-nostdinc']
+		libcxxabi_cross_args += ['-nostdinc', '-fno-builtin', '-nostdinc++']
+		libcxx_cross_args += ['-nostdinc', '-fno-builtin', '-nostdinc++']
 	endif
 
 	message('iostreams are not supported with EA libc')
@@ -507,7 +507,8 @@ if enable_monotonic_clock == false and enable_threads == false
 endif
 
 if meson.is_cross_build()
-	libcxxabi_cross_args += '-DLIBCXXABI_BAREMETAL'
+	libcxxabi_cross_args += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
+	libcxx_cross_args += ['-ffreestanding']
 	libcxx_conf_data.set('_BAREMETAL', true)
 endif
 

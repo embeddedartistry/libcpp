@@ -98,6 +98,7 @@ libcxxabi_warning_flags = [
 # These are the args that are used to BUILD libc++, not the args used by consumers
 libcxxabi_compile_args = [
 	'-fstrict-aliasing',
+	'-fvisibility=hidden',
 	'-D_LIBCPP_BUILD_STATIC',
 	# Prevent libc++abi from having library dependencies on libc++
 	'-D_LIBCPP_DISABLE_EXTERN_TEMPLATE',
@@ -133,6 +134,7 @@ libcxx_warning_flags = [
 # These are the args that are used to BUILD libc++, not the args used by consumers
 libcxx_compile_args = [
 	'-fvisibility-inlines-hidden',
+	'-fvisibility=hidden',
 	'-D_LIBCPP_BUILD_STATIC',
 	'-D_LIBCPP_BUILDING_LIBRARY',
 	'-D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER',

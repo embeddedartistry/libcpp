@@ -93,6 +93,14 @@ libcxxabi_warning_flags = [
     '-Wundef',
     '-Wno-long-long',
    	'-Werror=return-type',
+   	'-Wno-old-style-cast',
+   	'-Wno-missing-prototypes',
+   	# These are disabled because I don't want libc++ warnings in my code
+   	'-Wno-cast-align',
+   	'-Wno-unused-member-function',
+   	'-Wno-class-varargs',
+   	'-Wno-unused-template',
+   	'-Wno-switch-enum'
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -129,6 +137,10 @@ libcxx_warning_flags = [
     '-Wno-long-long',
     '-Werror=return-type',
     '-Wextra-semi',
+    # These are disabled because I don't want libc++ warnings in my code
+    '-Wno-old-style-cast',
+    '-Wno-weak-vtables',
+    '-Wno-sign-conversion'
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -160,6 +172,46 @@ libc_native_include_directories = []
 ###########################
 # Check Compiler Settings #
 ###########################
+
+if target_compiler.has_argument('-Wno-zero-as-null-pointer-constant')
+	libcxxabi_cross_args += '-Wno-zero-as-null-pointer-constant'
+	libcxx_cross_args += '-Wno-zero-as-null-pointer-constant'
+endif
+
+if native_compiler.has_argument('-Wno-zero-as-null-pointer-constant')
+	libcxxabi_native_args += '-Wno-zero-as-null-pointer-constant'
+	libcxx_native_args += '-Wno-zero-as-null-pointer-constant'
+endif
+
+if target_compiler.has_argument('-Wno-reserved-id-macro')
+	libcxxabi_cross_args += '-Wno-reserved-id-macro'
+	libcxx_cross_args += '-Wno-reserved-id-macro'
+endif
+
+if native_compiler.has_argument('-Wno-reserved-id-macro')
+	libcxxabi_native_args += '-Wno-reserved-id-macro'
+	libcxx_native_args += '-Wno-reserved-id-macro'
+endif
+
+if target_compiler.has_argument('-Wno-deprecated-dynamic-exception-spec')
+	libcxxabi_cross_args += '-Wno-deprecated-dynamic-exception-spec'
+	libcxx_cross_args += '-Wno-deprecated-dynamic-exception-spec'
+endif
+
+if native_compiler.has_argument('-Wno-deprecated-dynamic-exception-spec')
+	libcxxabi_native_args += '-Wno-deprecated-dynamic-exception-spec'
+	libcxx_native_args += '-Wno-deprecated-dynamic-exception-spec'
+endif
+
+if target_compiler.has_argument('-Wno-comma')
+	libcxxabi_cross_args += '-Wno-comma'
+	libcxx_cross_args += '-Wno-comma'
+endif
+
+if native_compiler.has_argument('-Wno-comma')
+	libcxxabi_native_args += '-Wno-comma'
+	libcxx_native_args += '-Wno-comma'
+endif
 
 if target_compiler.has_argument('-Wmismatched-tags')
 	libcxxabi_cross_args += '-Wmismatched-tags'

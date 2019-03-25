@@ -81,26 +81,25 @@ libcxxabi_warning_flags = [
 	'-Wconversion',
 	'-Wchar-subscripts',
 	'-Wmissing-braces',
-	'-Wunused-function',
+	#'-Wunused-function',
 	'-Wshadow',
 	'-Wsign-compare',
 	'-Wsign-conversion',
 	'-Wstrict-aliasing=2',
 	'-Wstrict-overflow=4',
 	'-Wwrite-strings',
-    '-Wunused-parameter',
-    '-Wunused-variable',
-    '-Wundef',
-    '-Wno-long-long',
-   	'-Werror=return-type',
-   	'-Wno-old-style-cast',
-   	'-Wno-missing-prototypes',
-   	# These are disabled because I don't want libc++ warnings in my code
-   	'-Wno-cast-align',
-   	'-Wno-unused-member-function',
-   	'-Wno-class-varargs',
-   	'-Wno-unused-template',
-   	'-Wno-switch-enum'
+	#'-Wunused-parameter',
+	'-Wunused-variable',
+	'-Wundef',
+	'-Wno-long-long',
+	'-Werror=return-type',
+	'-Wno-old-style-cast',
+	# These are disabled because I don't want libc++ warnings in my code
+	'-Wno-unused-parameter',
+	'-Wno-unused-function',
+	'-Wno-cast-align',
+	'-Wno-switch-enum',
+	'-Wno-switch',
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -133,14 +132,13 @@ libcxx_warning_flags = [
 	'-Wextra',
 	'-W',
 	'-Wwrite-strings',
-    '-Wno-unused-parameter',
-    '-Wno-long-long',
-    '-Werror=return-type',
-    '-Wextra-semi',
-    # These are disabled because I don't want libc++ warnings in my code
-    '-Wno-old-style-cast',
-    '-Wno-weak-vtables',
-    '-Wno-sign-conversion'
+	'-Wno-unused-parameter',
+	'-Wno-long-long',
+	'-Werror=return-type',
+	'-Wextra-semi',
+	# These are disabled because I don't want libc++ warnings in my code
+	'-Wno-old-style-cast',
+	'-Wno-sign-conversion'
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -172,6 +170,56 @@ libc_native_include_directories = []
 ###########################
 # Check Compiler Settings #
 ###########################
+
+if target_compiler.has_argument('-Wno-weak-vtables')
+	libcxxabi_cross_args += '-Wno-weak-vtables'
+	libcxx_cross_args += '-Wno-weak-vtables'
+endif
+
+if native_compiler.has_argument('-Wno-weak-vtables')
+	libcxxabi_native_args += '-Wno-weak-vtables'
+	libcxx_native_args += '-Wno-weak-vtables'
+endif
+
+if target_compiler.has_argument('-Wno-missing-prototypes') and target_compiler.get_id() != 'gcc'
+	libcxxabi_cross_args += '-Wno-missing-prototypes'
+	libcxx_cross_args += '-Wno-missing-prototypes'
+endif
+
+if native_compiler.has_argument('-Wno-missing-prototypes')  and native_compiler.get_id() != 'gcc'
+	libcxxabi_native_args += '-Wno-missing-prototypes'
+	libcxx_native_args += '-Wno-missing-prototypes'
+endif
+
+if target_compiler.has_argument('-Wno-unused-member-function')
+	libcxxabi_cross_args += '-Wno-unused-member-function'
+	libcxx_cross_args += '-Wno-unused-member-function'
+endif
+
+if native_compiler.has_argument('-Wno-unused-member-function')
+	libcxxabi_native_args += '-Wno-unused-member-function'
+	libcxx_native_args += '-Wno-unused-member-function'
+endif
+
+if target_compiler.has_argument('-Wno-class-varargs')
+	libcxxabi_cross_args += '-Wno-class-varargs'
+	libcxx_cross_args += '-Wno-class-varargs'
+endif
+
+if native_compiler.has_argument('-Wno-class-varargs')
+	libcxxabi_native_args += '-Wno-class-varargs'
+	libcxx_native_args += '-Wno-class-varargs'
+endif
+
+if target_compiler.has_argument('-Wno-unused-template')
+	libcxxabi_cross_args += '-Wno-unused-template'
+	libcxx_cross_args += '-Wno-unused-template'
+endif
+
+if native_compiler.has_argument('-Wno-unused-template')
+	libcxxabi_native_args += '-Wno-unused-template'
+	libcxx_native_args += '-Wno-unused-template'
+endif
 
 if target_compiler.has_argument('-Wno-zero-as-null-pointer-constant')
 	libcxxabi_cross_args += '-Wno-zero-as-null-pointer-constant'
@@ -561,7 +609,6 @@ endif
 if meson.is_cross_build()
 	libcxxabi_cross_args += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
 	libcxx_cross_args += ['-ffreestanding']
-	libcxx_conf_data.set('_BAREMETAL', true)
 endif
 
 if force_32_bit == true

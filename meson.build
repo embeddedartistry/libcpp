@@ -396,13 +396,13 @@ if use_ea_libc == true
 		include_directories('embedded-unwind/include', is_system: true)
 	]
 
-	message('Building C++ for native architecture: ' + host_architecture)
+	message('Building C++ for native architecture: ' + native_architecture)
 	libc_native_include_directories += [
 		include_directories(ea_libc_path + '/include', is_system: true),
 		include_directories(ea_libc_path + '/printf', is_system: true),
 		include_directories(ea_libc_path + '/openlibm/include', is_system: true),
 		include_directories(ea_libc_path + '/openlibm/src', is_system: true),
-		include_directories(ea_libc_path + '/arch/' + host_architecture + '/include', is_system: true),
+		include_directories(ea_libc_path + '/arch/' + native_architecture + '/include', is_system: true),
 		include_directories('embedded-unwind/include', is_system: true)
 	]
 

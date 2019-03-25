@@ -580,7 +580,7 @@ if enable_threads == true
 		message('Enabling pthread support for native C++ library since an RTOS was selected')
 		libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
 		libcxx_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
-		host_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+		native_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
 	endif
 
 	if host_os != 'darwin' and host_os != 'windows'
@@ -679,7 +679,7 @@ libcxxabi_dep = declare_dependency(
 libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags,
 	link_args: stdlib_link_flags + ['-Wl,-U,___cxa_thread_atexit_impl']
 )
 
@@ -786,7 +786,7 @@ libcxx_filesystem_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: libcpp_fs_native,
 	dependencies: [install_cpp_headers_dep],
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags,
 	link_args: stdlib_link_flags
 )
 
@@ -802,7 +802,7 @@ libcxx_full_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: [libcpp_native, libcpp_experimental_native],
 	dependencies: [install_cpp_headers_dep],
-	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + host_stdlib_compiler_flags,
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags,
 	link_args: stdlib_link_flags
 )
 

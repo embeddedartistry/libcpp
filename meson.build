@@ -611,6 +611,7 @@ libcpp = static_library('c++',
     include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
+    pic: true
 )
 
 libcpp_experimental = static_library('c++experimental',
@@ -619,6 +620,7 @@ libcpp_experimental = static_library('c++experimental',
     include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
+    pic: true
 )
 
 libcpp_native = static_library('c++_native',
@@ -627,6 +629,7 @@ libcpp_native = static_library('c++_native',
     include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
+    pic: true,
     native: true
 )
 
@@ -636,6 +639,7 @@ libcpp_experimental_native = static_library('c++experimental_native',
     include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
+    pic: true,
     native: true
 )
 
@@ -646,6 +650,7 @@ if enable_filesystem == true
 		include_directories: libc_target_include_directories + libcxx_include_directories,
 		link_args: libcxx_link_args + libcxx_cross_link_args,
 		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
+		pic: true
 	)
 
 	libcpp_fs_native = static_library('c++fs_native',
@@ -654,6 +659,7 @@ if enable_filesystem == true
 		include_directories: libc_native_include_directories + libcxx_include_directories,
 		link_args: libcxx_link_args,
 		dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
+		pic: true,
 		native: true
 	)
 else

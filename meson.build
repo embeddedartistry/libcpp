@@ -470,14 +470,17 @@ if enable_pedantic_error == true
 endif
 
 if disable_exceptions == true
+	message('Exceptions are disabled')
 	libcxxabi_compile_args += ['-D_LIBCXXABI_NO_EXCEPTIONS', '-fno-exceptions']
 	libcxx_compile_args += ['-fno-exceptions']
 	libcxx_conf_data.set('_LIBCPP_NO_EXCEPTIONS', true)
 else
+	message('Exceptions are disabled')
 	libcxxabi_compile_args += ['-funwind-tables']
 endif
 
 if disable_rtti == true
+	message('RTTI is Disabled')
 	libcxx_compile_args += ['-fno-rtti']
 	libcxx_conf_data.set('_LIBCPP_NO_RTTI', true)
 endif

@@ -319,9 +319,8 @@ libcxxabi_native_files = []
 libcxxabi_files += files(
 	'libcxxabi/src/cxa_aux_runtime.cpp',
 	'libcxxabi/src/cxa_default_handlers.cpp',
-	'libcxxabi/src/cxa_exception_storage.cpp',
 	'libcxxabi/src/cxa_guard.cpp',
-	'libcxxabi/src/cxa_handlers.cpp',
+	'src/c++abi/cxa_handlers.cpp',
 	'libcxxabi/src/cxa_unexpected.cpp',
 	'libcxxabi/src/cxa_vector.cpp',
 	'libcxxabi/src/cxa_virtual.cpp',
@@ -411,9 +410,12 @@ if use_ea_libc == true
 	libcxx_conf_data.set('_BAREMETAL', true)
 
 	libcxxabi_files += files(
-		'src/c++abi/cxa_demangle.cpp',
 		'src/c++abi/abort_message.cpp',
 	)
+
+	if disable_rtti == false
+		libcxxabi_files += files('src/c++abi/cxa_demangle.cpp')
+	endif
 
 	libcpp_core_files += files(
 		'src/c++/debug.cpp',
@@ -434,9 +436,12 @@ if use_ea_libc == true
 else
 	message('Compiling with the compiler or sysroot libc headers')
 	libcxxabi_files += files(
-		'libcxxabi/src/cxa_demangle.cpp',
 		'libcxxabi/src/abort_message.cpp',
 	)
+
+	if disable_rtti == false
+		libcxxabi_files += files('libcxxabi/src/cxa_demangle.cpp')
+	endif
 
 	libcpp_core_files += files(
 		'libcxx/src/debug.cpp',
@@ -475,9 +480,12 @@ if disable_exceptions == true
 	libcxx_compile_args += ['-fno-exceptions']
 	libcxx_conf_data.set('_LIBCPP_NO_EXCEPTIONS', true)
 else
-	message('Exceptions are disabled')
+	message('Exceptions are enabled')
 	libcxxabi_compile_args += ['-funwind-tables']
+	libcxxabi_files += files('libcxxabi/src/cxa_exception_storage.cpp',)
 endif
+
+assert(silent_terminate == true and disable_rtti == true, 'Loud terminate requires RTTI')
 
 if disable_rtti == true
 	message('RTTI is Disabled')
@@ -509,9 +517,8 @@ if always_use_assert == true
 	libcxxabi_compile_args += '-UNDEBUG'
 	libcxx_compile_args += '-UNDEBUG'
 else
-	# TODO: Should we just match the libcpp behavior and not define this? The macro is different for libcxxabi...
 	libcxxabi_compile_args += '-DNDEBUG'
-	libcxx_compile_args += '-D_LIBCPP_DEBUG=0'
+	libcxx_compile_args += '-D_LIBCPP_DEBUG=0 -DNDEBUG'
 endif
 
 if use_llvm_libunwind == true

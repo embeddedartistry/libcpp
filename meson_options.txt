@@ -17,5 +17,5 @@ option('libcxx-build-external-thread-api', type: 'boolean', value: false, yield:
 option('libcxx-enable-filesystem', type: 'boolean', value: false, yield: true)
 option('libcxx-enable-stdinout', type: 'boolean', value: true, yield: true)
 option('libcxx-default-newdelete', type: 'boolean', value: true, yield: true)
-option('libcxx-silent-terminate', type: 'boolean', value: false, yield: true)
+option('libcxx-silent-terminate', type: 'boolean', value: true, yield: true)
 option('libcxx-monotonic-clock', type: 'boolean', value: true, yield: true)

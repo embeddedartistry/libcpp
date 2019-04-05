@@ -57,7 +57,8 @@ const char *itanium_demangle::parse_discriminator(const char *first,
   return first;
 }
 
-#ifndef NDEBUG
+#if 0
+//#ifndef NDEBUG
 namespace {
 struct DumpVisitor {
   unsigned Depth = 0;

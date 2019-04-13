@@ -6,11 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "__config"
-#ifndef _LIBCPP_HAS_NO_THREADS
-
-#include "thread"
-#include "exception"
+#include <thread>
+#include <sysetm_error>
 #include "vector"
 #include "future"
 #include "limits"

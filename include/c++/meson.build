@@ -31,7 +31,14 @@ generate_libpp_config_header = custom_target(
 
 external_threading_header_dep = []
 
-if thread_library == 'freertos'
+if thread_library == 'ea-framework'
+	framework_external_threading_header = configure_file(
+		input: 'external_threading/__external_threading_framework',
+		output: '__external_threading',
+		copy: true
+	)
+	external_threading_header_dep += framework_external_threading_header
+elif thread_library == 'freertos'
 
 	freertos_external_threading_header = configure_file(
 		input: 'external_threading/__external_threading_freertos',
@@ -46,9 +53,6 @@ elif thread_library == 'threadx'
 		output: '__external_threading',
 		copy: true
 	)
-
-elif thread_library == 'ea-framework'
-	 #TODO
 endif
 
 ### Install C++ Headers ###

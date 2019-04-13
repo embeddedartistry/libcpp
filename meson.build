@@ -149,6 +149,8 @@ libcxx_compile_args = [
 	'-D_LIBCPP_BUILDING_LIBRARY',
 	'-D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER',
 	'-DLIBCXX_BUILDING_LIBCXXABI',
+	# Define we don't touch libcpp debug settings,
+	'-D_LIBCPP_DEBUG=0',
 	# STL needs GNU functions to compile/link
 	'-D_GNU_SOURCE',
 ] + libcxx_warning_flags
@@ -319,7 +321,6 @@ libcxxabi_native_files = []
 libcxxabi_files += files(
 	'libcxxabi/src/cxa_aux_runtime.cpp',
 	'libcxxabi/src/cxa_default_handlers.cpp',
-	'libcxxabi/src/cxa_guard.cpp',
 	'src/c++abi/cxa_handlers.cpp',
 	'libcxxabi/src/cxa_unexpected.cpp',
 	'libcxxabi/src/cxa_vector.cpp',
@@ -353,7 +354,6 @@ libcpp_core_files += files(
 	'libcxx/src/stdexcept.cpp',
 	'libcxx/src/strstream.cpp',
 	'libcxx/src/system_error.cpp',
-	'src/c++/thread.cpp',
 	'libcxx/src/typeinfo.cpp',
 	'libcxx/src/utility.cpp',
 	'libcxx/src/valarray.cpp',
@@ -518,7 +518,7 @@ if always_use_assert == true
 	libcxx_compile_args += '-UNDEBUG'
 else
 	libcxxabi_compile_args += '-DNDEBUG'
-	libcxx_compile_args += '-D_LIBCPP_DEBUG=0 -DNDEBUG'
+	libcxx_compile_args += '-DNDEBUG'
 endif
 
 if use_llvm_libunwind == true
@@ -560,37 +560,79 @@ if enable_threads == true
 			libcxxabi_target_dependencies += libthread
 			libcxx_target_dependencies += libthread
 
+			libcpp_core_files += files('src/c++/thread.cpp')
+			libcxxabi_files += files('libcxxabi/src/cxa_guard.cpp')
+
 			if libthread_native.found()
 				libcxxabi_native_dependencies += libthread_native
 				libcxx_native_dependencies += libthread_native
 			endif
+		else
+			assert(false, 'pthread library not found')
 		endif
-	elif thread_library != 'ea-framework'
+	elif thread_library == 'ea-framework'
 		# If we aren't using pthreads, use an external header
-		assert(not (has_external_threading == true and build_external_threading == true),
-		'Cannot select both has_esxternal_threading and build_external_threading. Pick one.')
+		message('Building with framework thread library support')
+		message('Using include path to core RTOS headers: ' + os_header_path)
+		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
 
-		if has_external_threading == false and build_external_threading == false
-			message('A non-pthread OS was selected. Enabling external threading header support.')
-			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
-			has_external_threading = true
-		elif has_external_threading == true
-			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
-		elif build_external_threading == true
-			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL', true)
-		endif
-
-		if os_header_path == ''
-			message('If the build fails, please set os-header-path so the buidl can find your includes')
+		# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
+		if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
+			libcxxabi_include_directories += include_directories(os_header_path)
+			libcxx_include_directories += include_directories(os_header_path)
 		else
 			libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
 			libcxx_include_directories += include_directories(os_header_path, is_system: true)
 		endif
 
-		message('Enabling pthread support for native C++ library since an RTOS was selected')
-		libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
-		libcxx_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
-		native_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+		libcpp_core_files += files('src/c++/thread.cpp')
+
+		# We can't ensure that semaphores and mutexes are safe. We use atomics.
+		libcxxabi_files += files('src/lightabi/cxa_guard.cpp')
+
+		message('Enabling pthread support for the native C++ library')
+		libcxxabi_native_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxx_native_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		native_stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+
+    #elif THREADX
+	#message('Enabling pthread support for native C++ library since an RTOS was selected')
+	#libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+	#libcxx_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
+	#native_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST
+
+	else
+		# If we aren't using pthreads o framework, use an external header
+		assert(not (has_external_threading == true and build_external_threading == true),
+		'Cannot select both has_external_threading and build_external_threading. Pick one.')
+
+		message('Enabling custom external threading support.')
+
+		if has_external_threading == false and build_external_threading == false
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
+			has_external_threading = true
+			libcpp_core_files += files('src/c++/thread.cpp')
+		elif has_external_threading == true
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
+			libcpp_core_files += files('src/c++/thread.cpp')
+		elif build_external_threading == true
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL', true)
+		endif
+
+		if os_header_path == ''
+			message('If the build fails, please set os-header-path so the build can find your includes')
+		else
+			# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
+			if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
+				libcxxabi_include_directories += include_directories(os_header_path)
+				libcxx_include_directories += include_directories(os_header_path)
+			else
+				libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
+				libcxx_include_directories += include_directories(os_header_path, is_system: true)
+			endif
+		endif
+
+		libcxxabi_files += files('src/c++abi/cxa_guard.cpp')
 	endif
 
 	if host_os != 'darwin' and host_os != 'windows'
@@ -609,6 +651,7 @@ else
 	message('Building without threading support.')
 	libcxx_conf_data.set('_LIBCPP_HAS_NO_THREADS', true)
 	libcxxabi_compile_args += '-D_LIBCXXABI_HAS_NO_THREADS'
+	libcxxabi_files += files('libcxxabi/src/cxa_guard.cpp')
 endif
 
 # monotonic clock can only be disabled if there is no threading
@@ -719,7 +762,11 @@ libcpp = static_library('c++',
     cpp_args: libcxx_compile_args + libcxx_cross_args,
     include_directories: libc_target_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args + libcxx_cross_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_target_dependencies],
+    dependencies: [
+	    libcxxabi_header_deps,
+	    install_cpp_headers_dep,
+	    libcxx_target_dependencies,
+    ],
     pic: true
 )
 
@@ -737,7 +784,11 @@ libcpp_native = static_library('c++_native',
     cpp_args: libcxx_compile_args + libcxx_native_args,
     include_directories: libc_native_include_directories + libcxx_include_directories,
     link_args: libcxx_link_args,
-    dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxx_native_dependencies],
+    dependencies: [
+    	libcxxabi_header_deps,
+    	install_cpp_headers_dep,
+    	libcxx_native_dependencies,
+    ],
     pic: true,
     native: true
 )

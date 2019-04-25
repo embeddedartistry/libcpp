@@ -595,6 +595,13 @@ if enable_threads == true
 		libcxx_native_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 		native_stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 
+		if target_architecture == 'x86' or target_architecture == 'x86_64'
+			# Then we will also force pthreads
+			libcxxabi_cross_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_cross_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		endif
+
     #elif THREADX
 	#message('Enabling pthread support for native C++ library since an RTOS was selected')
 	#libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
@@ -877,4 +884,10 @@ libcxx_header_include_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	dependencies: [install_cpp_headers_dep],
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags
+)
+
+libcxx_native_header_include_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	dependencies: [install_cpp_headers_dep],
+	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags
 )

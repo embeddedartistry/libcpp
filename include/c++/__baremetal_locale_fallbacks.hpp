@@ -129,6 +129,7 @@ int __libcpp_sscanf_l(const char *__s, __attribute__((unused)) locale_t __l, con
     return __res;
 #else
     assert(0 && "sscanf_l fallback to be implemented\n");
+    return -1;
 #endif
 }
 

@@ -426,6 +426,7 @@ get_swprintf()
 {
 #if defined(_BAREMETAL)
     assert(0 && "swprintf not implemented");
+    return nullptr;
 #elif !defined(_LIBCPP_MSVCRT)
     return swprintf;
 #else

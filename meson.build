@@ -485,8 +485,6 @@ else
 	libcxxabi_files += files('libcxxabi/src/cxa_exception_storage.cpp',)
 endif
 
-assert(silent_terminate == true and disable_rtti == true, 'Loud terminate requires RTTI')
-
 if disable_rtti == true
 	message('RTTI is Disabled')
 	libcxx_compile_args += ['-fno-rtti']
@@ -529,6 +527,8 @@ endif
 # causes extra I/O and demangling code to be pulled in.
 if silent_terminate == true
 	libcxxabi_compile_args += '-DLIBCXXABI_SILENT_TERMINATE'
+else
+	assert(disable_rtti == false, 'Loud terminate requires RTTI')
 endif
 
 if default_newdelete == true

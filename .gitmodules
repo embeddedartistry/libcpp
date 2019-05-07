@@ -10,3 +10,9 @@
 [submodule "embedded-unwind"]
 	path = embedded-unwind
 	url = git@github.com:embeddedartistry/embedded-unwind.git
+[submodule "extensions/plf_list"]
+	path = extensions/plf_list
+	url = git@github.com:mattreecebentley/plf_list.git
+[submodule "extensions/plf_stack"]
+	path = extensions/plf_stack
+	url = https://github.com/mattreecebentley/plf_stack

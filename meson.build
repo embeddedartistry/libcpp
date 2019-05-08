@@ -347,7 +347,7 @@ libcpp_core_files += files(
 	'libcxx/src/ios.cpp',
 	'libcxx/src/memory.cpp',
 	'libcxx/src/mutex.cpp',
-	'libcxx/src/new.cpp',
+	'src/c++/new_terminate_badalloc.cpp',
 	'libcxx/src/optional.cpp',
 	'libcxx/src/regex.cpp',
 	'libcxx/src/shared_mutex.cpp',

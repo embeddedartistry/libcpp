@@ -79,3 +79,22 @@ fwdemo_sim_platform_dep = declare_dependency(
     sources: files('boot.cpp', 'platform.cpp'),
 )
 ```
+
+## Project Options
+
+### Blocking new/delete
+
+You can block the `new` and `delete` operators by setting the `libcxx-default-newdelete` to `false`:
+
+```
+meson buildresults -Dlibcxx-default-newdelete=false
+```
+
+You can also use `meson configure`:
+
+```
+cd buildresults
+meson configure -Dlibcxx-default-newdelete=false
+```
+
+If you are using libcpp as a subproject, you can specify this setting in the containing project options.

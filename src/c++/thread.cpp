@@ -21,6 +21,10 @@ thread::~thread()
 {
     if (!__libcpp_thread_isnull(&__t_))
         terminate();
+
+#ifdef _LIBCPP_HAS_THREAD_API_EXTERNAL
+    __libcpp_thread_destroy(&__t_);
+#endif
 }
 
 void

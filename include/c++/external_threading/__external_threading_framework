@@ -135,6 +135,9 @@ int __libcpp_thread_create(__libcpp_thread_t *__t, void *(*__func)(void *),
                            void *__arg);
 
 _LIBCPP_THREAD_ABI_VISIBILITY
+int __libcpp_thread_destroy(__libcpp_thread_t *__t);
+
+_LIBCPP_THREAD_ABI_VISIBILITY
 __libcpp_thread_id __libcpp_thread_get_current_id();
 
 _LIBCPP_THREAD_ABI_VISIBILITY

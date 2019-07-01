@@ -135,7 +135,6 @@ libcxx_warning_flags = [
 	'-Wno-unused-parameter',
 	'-Wno-long-long',
 	'-Werror=return-type',
-	'-Wextra-semi',
 	# These are disabled because I don't want libc++ warnings in my code
 	'-Wno-old-style-cast',
 	'-Wno-sign-conversion'

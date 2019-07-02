@@ -1,0 +1,92 @@
+#!groovy
+@Library('jenkins-pipeline-lib') _
+
+pipeline
+{
+  agent any
+  environment
+  {
+    GIT_CHANGE_LOG = gitChangeLog(currentBuild.changeSets)
+  }
+  stages
+  {
+    stage('Setup')
+    {
+      steps
+      {
+        setGithubStatus('continuous-integration/jenkins/libcpp', 'libcpp CI Build Started', 'PENDING')
+      }
+    }
+    stage('Clean')
+    {
+      when
+      {
+        expression
+        {
+          /*
+          * If the previous build suceeeded (unstable means test failed but build passed)
+          * then we continue on in CI mode. If the previous build failed we want to
+          * start with a clean environment. This is done to reduce manual user interation.
+          */
+          return !(didLastBuildSucceed())
+        }
+      }
+      steps
+      {
+        echo('Previous build failed: Running a clean build.')
+        sh 'make purify'
+      }
+    }
+    stage('Build')
+    {
+      steps
+      {
+        sh 'make'
+      }
+    }
+    stage('Cross Compile for ARM')
+    {
+      steps
+      {
+        sh 'meson buildresults/arm/ --cross-file build/cross/gcc/arm/nrf52840.txt'
+        sh 'ninja -C buildresults/arm'
+      }
+    }
+    stage('ScanWorkspace')
+    {
+      steps
+      {
+        warnings categoriesPattern: '', consoleParsers: [[parserName: 'Clang (LLVM based)']], defaultEncoding: '', excludePattern: '**/buildresults/**, **/dependencies/**', failedNewAll: '5', failedTotalAll: '20', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableNewAll: '1', unstableTotalAll: '15', useStableBuildAsReference: true
+
+        // Scan workspace to check open tasks
+        openTasks(defaultEncoding: '', excludePattern: 'buildresults/**, dependencies/**', healthy: '', high: 'FIXME, FIX', ignoreCase: true, low: '', normal: 'TODO', pattern: '**/*.c, **/*.h, **/*.cpp, **/*.hpp, *.lua **/*.sh', unHealthy: '')
+      }
+    }
+  }
+  post
+  {
+    success
+    {
+      setGithubStatus('continuous-integration/jenkins/libcpp', 'libcpp CI Build Successful', 'SUCCESS')
+    }
+    failure
+    {
+      setGithubStatus('continuous-integration/jenkins/libcpp', 'libcpp CI Build Failed', 'FAILURE')
+    }
+    unstable
+    {
+      // Unstable occurs when there are failing tests
+      setGithubStatus('continuous-integration/jenkins/libcpp', 'libcpp CI build has test or warning failures', 'FAILURE')
+    }
+    aborted
+    {
+      echo "Build manually aborted on Jenkins"
+      slackNotify('ABORTED')
+      setGithubStatus('continuous-integration/jenkins/libcpp', 'libcpp CI Build Aborted', 'ERROR')
+    }
+    always
+    {
+      slackNotify(currentBuild.currentResult)
+    }
+  }
+}

@@ -1,17 +1,16 @@
-project('libcpp',
-	'cpp',
-	default_options : ['cpp_std=c++17'],)
+project('Embedded Artistry libcpp',
+	['cpp'],
+	default_options : [
+		# `build.*` options affect `native: true targets`
+		# plain options affect `native: false` targets.
+		'cpp_std=c++17', 'build.cpp_std=c++17',
+	],
+	license: 'MIT',
+	meson_version: '>0.51.0')
 
 ###############
 # Build Setup #
 ###############
-
-#TODO: find libunwind?
-# TODO: force link libunwind (-lunwind)?
-# TODO: find required libraries
-# -rtlib=compiler-rt
-# find_compiler_rt_library(builtins LIBCXX_BUILTINS_LIBRARY)
-#  check_library_exists(rt clock_gettime "" LIBCXX_HAS_RT_LIB) <---- will we supply something like this?
 
 cat = find_program('cat')
 cmake_prep = find_program('build/scripts/prepare_cmake.sh')
@@ -600,12 +599,6 @@ if enable_threads == true
 			libcxx_cross_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 			stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 		endif
-
-    #elif THREADX
-	#message('Enabling pthread support for native C++ library since an RTOS was selected')
-	#libcxxabi_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
-	#libcxx_native_args += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST'
-	#native_stdlib_compiler_flags += '-D_LIBCPP_FORCE_PTHREAD_ON_HOST
 
 	else
 		# If we aren't using pthreads o framework, use an external header

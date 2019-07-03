@@ -601,7 +601,7 @@ if enable_threads == true
 		endif
 
 	else
-		# If we aren't using pthreads o framework, use an external header
+		# If we aren't using pthreads or framework, use an external header
 		assert(not (has_external_threading == true and build_external_threading == true),
 		'Cannot select both has_external_threading and build_external_threading. Pick one.')
 

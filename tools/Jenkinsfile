@@ -41,7 +41,7 @@ pipeline
     {
       steps
       {
-        sh 'meson buildresults/arm/ --cross-file build/cross/gcc/arm/nrf52840.txt'
+        sh 'meson buildresults/arm/ --cross-file build/cross/gcc/arm/nrf52840.txt -Denable-threading=false -Dlibcxx-enable-chrono=false -Dlibcxx-monotonic-clock=false'
         sh 'ninja -C buildresults/arm'
       }
     }

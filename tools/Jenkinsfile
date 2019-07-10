@@ -55,7 +55,7 @@ pipeline
         enabledForFailure: true,
         healthy: 5,
         unhealthy: 10,
-        referenceJobName: 'ea-ci/libcpp/master',
+        referenceJobName: 'ea-nightly/libcpp/master',
         qualityGates: [
           // 3 new issue: unstable
           //[threshold: 3, type: 'DELTA', unstable: true],

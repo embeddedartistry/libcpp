@@ -735,7 +735,7 @@ libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags,
-	link_args: stdlib_link_flags + ['-Wl,-U,___cxa_thread_atexit_impl']
+	link_args: stdlib_link_flags #+ ['-Wl,-U,___cxa_thread_atexit_impl']
 )
 
 ################

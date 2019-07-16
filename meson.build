@@ -425,8 +425,8 @@ if use_ea_libc == true
 	# TODO: build Unwind-sjlj_pthread.c
 	if target_architecture == 'arm'
 		libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
-		libcxxabi_cross_args += ['-nostdinc', '-fno-builtin', '-nostdinc++']
-		libcxx_cross_args += ['-nostdinc', '-fno-builtin', '-nostdinc++']
+		libcxxabi_cross_args += ['-nostdinc', '-fno-builtin']
+		libcxx_cross_args += ['-nostdinc', '-fno-builtin']
 	endif
 
 	message('iostreams are not supported with EA libc')
@@ -689,6 +689,9 @@ subdir('include')
 # libcxxabi Build #
 ###################
 
+# Note that due to the behavior of #include_next and -isystem, you need to ensure that
+# the C++ includes are _last_ to be added to a target so that they are first in the search list
+
 # gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
 if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
 	libcxxabi_include_directories += [
@@ -704,7 +707,7 @@ endif
 
 libcxxabi = static_library('c++abi',
     libcxxabi_files,
-    include_directories: libcxxabi_include_directories + libc_target_include_directories,
+    include_directories: libc_target_include_directories + libcxxabi_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_cross_args,
     link_args: libcxxabi_link_args + libcxxabi_cross_link_args + ['-lunwind'],
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxxabi_target_dependencies],
@@ -713,7 +716,7 @@ libcxxabi = static_library('c++abi',
 
 libcxxabi_native = static_library('c++abi_native',
     libcxxabi_files,
-    include_directories: libcxxabi_include_directories + libc_native_include_directories,
+    include_directories: libc_native_include_directories + libcxxabi_include_directories,
     cpp_args: libcxxabi_compile_args + libcxxabi_native_args,
     link_args: libcxxabi_link_args + ['-lunwind'],
     dependencies: [libcxxabi_header_deps, install_cpp_headers_dep, libcxxabi_native_dependencies],
@@ -738,6 +741,10 @@ libcxxabi_native_dep = declare_dependency(
 ################
 # libcxx Build #
 ################
+
+# Note that due to the behavior of #include_next and -isystem, you need to ensure that
+# the C++ includes are _last_ to be added to a target so that they are first in the search list
+
 
 # gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
 if meson.is_cross_build() and target_compiler.get_id() == 'gcc'

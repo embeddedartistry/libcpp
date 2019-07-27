@@ -99,6 +99,8 @@ libcxxabi_warning_flags = [
 	'-Wno-cast-align',
 	'-Wno-switch-enum',
 	'-Wno-switch',
+	'-Wno-inline',
+	'-Wno-effc++',
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -125,6 +127,8 @@ libcxxabi_cross_link_args = []
 libcxxabi_native_dependencies = []
 libcxxabi_target_dependencies = []
 libcxxabi_include_directories = []
+libcxxabi_native_dep_link_args = []
+libcxxabi_target_dep_link_args = []
 
 libcxx_warning_flags = [
 	'-Wall',
@@ -670,12 +674,21 @@ if force_32_bit == true
 	libcxxabi_native_args += '-m32'
 endif
 
+
 if target_compiler.has_function('__cxa_thread_atexit_impl')
 	libcxx_cross_args += ['-DHAVE___CXA_THREAD_ATEXIT_IMPL']
+elif host_machine.system() == 'darwin'
+	# On OS X, clang doesn't handle weak linking the way we expect
+	# So we'll work around it by undefining the weak symbol
+	libcxxabi_target_dep_link_args += '-Wl,-U,___cxa_thread_atexit_impl'
 endif
 
 if native_compiler.has_function('__cxa_thread_atexit_impl')
 	libcxx_native_args += ['-DHAVE___CXA_THREAD_ATEXIT_IMPL']
+elif build_machine.system() == 'darwin'
+	# On OS X, clang doesn't handle weak linking the way we expect
+	# So we'll work around it by undefining the weak symbol
+	libcxxabi_native_dep_link_args += '-Wl,-U,___cxa_thread_atexit_impl'
 endif
 
 ###################
@@ -728,14 +741,14 @@ libcxxabi_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags,
-	link_args: stdlib_link_flags #+ ['-Wl,-U,___cxa_thread_atexit_impl']
+	link_args: stdlib_link_flags + libcxxabi_target_dep_link_args
 )
 
 libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
 	compile_args: stdlib_compiler_flags + cpp_stdlib_compiler_flags + native_stdlib_compiler_flags,
-	link_args: stdlib_link_flags #+ ['-Wl,-U,___cxa_thread_atexit_impl']
+	link_args: stdlib_link_flags + libcxxabi_native_dep_link_args
 )
 
 ################

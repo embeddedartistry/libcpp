@@ -93,14 +93,17 @@ libcxxabi_warning_flags = [
 	'-Wno-long-long',
 	'-Werror=return-type',
 	'-Wno-old-style-cast',
-	# These are disabled because I don't want libc++ warnings in my code
+	# These are disabled because I don't want libc++ warnings when we turn
+	# on extra warnings for the framework
 	'-Wno-unused-parameter',
 	'-Wno-unused-function',
 	'-Wno-cast-align',
 	'-Wno-switch-enum',
 	'-Wno-switch',
+	'-Wno-switch-default',
 	'-Wno-inline',
 	'-Wno-effc++',
+	'-Wno-missing-declarations',
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -138,9 +141,17 @@ libcxx_warning_flags = [
 	'-Wno-unused-parameter',
 	'-Wno-long-long',
 	'-Werror=return-type',
-	# These are disabled because I don't want libc++ warnings in my code
+	# These are disabled because I don't want libc++ warnings when we turn
+	# on extra warnings for the framework
 	'-Wno-old-style-cast',
-	'-Wno-sign-conversion'
+	'-Wno-sign-conversion',
+	'-Wno-conversion',
+	'-Wno-switch-default',
+	'-Wno-switch-enum',
+	'-Wno-inline',
+	'-Wno-effc++',
+	'-Wno-cast-align',
+	'-Wno-double-promotion',
 ]
 
 # These are the args that are used to BUILD libc++, not the args used by consumers
@@ -174,6 +185,16 @@ libc_native_include_directories = []
 ###########################
 # Check Compiler Settings #
 ###########################
+
+if target_compiler.has_argument('-Wno-useless-cast')
+	libcxxabi_cross_args += '-Wno-useless-cast'
+	libcxx_cross_args += '-Wno-useless-cast'
+endif
+
+if native_compiler.has_argument('-Wno-useless-cast')
+	libcxxabi_native_args += '-Wno-useless-cast'
+	libcxx_native_args += '-Wno-useless-cast'
+endif
 
 if target_compiler.has_argument('-Wno-weak-vtables')
 	libcxxabi_cross_args += '-Wno-weak-vtables'
@@ -578,14 +599,8 @@ if enable_threads == true
 		message('Using include path to core RTOS headers: ' + os_header_path)
 		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
 
-		# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
-		if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
-			libcxxabi_include_directories += include_directories(os_header_path)
-			libcxx_include_directories += include_directories(os_header_path)
-		else
-			libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
-			libcxx_include_directories += include_directories(os_header_path, is_system: true)
-		endif
+		libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
+		libcxx_include_directories += include_directories(os_header_path, is_system: true)
 
 		libcpp_core_files += files('src/c++/thread.cpp')
 
@@ -625,14 +640,8 @@ if enable_threads == true
 		if os_header_path == ''
 			message('If the build fails, please set os-header-path so the build can find your includes')
 		else
-			# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
-			if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
-				libcxxabi_include_directories += include_directories(os_header_path)
-				libcxx_include_directories += include_directories(os_header_path)
-			else
-				libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
-				libcxx_include_directories += include_directories(os_header_path, is_system: true)
-			endif
+			libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
+			libcxx_include_directories += include_directories(os_header_path, is_system: true)
 		endif
 
 		libcxxabi_files += files('src/c++abi/cxa_guard.cpp')
@@ -705,18 +714,10 @@ subdir('include')
 # Note that due to the behavior of #include_next and -isystem, you need to ensure that
 # the C++ includes are _last_ to be added to a target so that they are first in the search list
 
-# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
-if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
-	libcxxabi_include_directories += [
-		include_directories('include/c++abi/'),
-		include_directories('include/c++/')
-	]
-else
-	libcxxabi_include_directories += [
-		include_directories('include/c++abi/', is_system: true),
-		include_directories('include/c++/', is_system: true)
-	]
-endif
+libcxxabi_include_directories += [
+	include_directories('include/c++abi/', is_system: true),
+	include_directories('include/c++/', is_system: true)
+]
 
 libcxxabi = static_library('c++abi',
     libcxxabi_files,
@@ -758,23 +759,12 @@ libcxxabi_native_dep = declare_dependency(
 # Note that due to the behavior of #include_next and -isystem, you need to ensure that
 # the C++ includes are _last_ to be added to a target so that they are first in the search list
 
-
-# gcc-arm-none-eabi blows up if you use is_system: true to include C++ files
-if meson.is_cross_build() and target_compiler.get_id() == 'gcc'
-	libcxx_extensions_include_dir = include_directories('extensions')
-	libcxx_include_directories += [
-		include_directories('include/c++abi'),
-		include_directories('include/c++'),
-		libcxx_extensions_include_dir
-	]
-else
-	libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
-	libcxx_include_directories += [
-		include_directories('include/c++abi', is_system: true),
-		include_directories('include/c++', is_system: true),
-		libcxx_extensions_include_dir
-	]
-endif
+libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
+libcxx_include_directories += [
+	include_directories('include/c++abi', is_system: true),
+	include_directories('include/c++', is_system: true),
+	libcxx_extensions_include_dir
+]
 
 libcpp = static_library('c++',
     libcpp_core_files,

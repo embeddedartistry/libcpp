@@ -32,8 +32,8 @@ target_compiler = meson.get_compiler('cpp')
 # Process Build Options #
 #########################
 
-use_ea_libc = get_option('use-ea-libc')
-ea_libc_path = get_option('ea-libc-path')
+use_external_stdlib = get_option('use-external-stdlibs')
+external_stdlib_path = get_option('external-stdlib-path')
 disable_rtti = get_option('disable-rtti')
 disable_exceptions = get_option('disable-exceptions')
 use_compiler_rt = get_option('use-compiler-rt')
@@ -401,30 +401,30 @@ libcpp_filesystem_files += files(
 # Apply Project Option Changes #
 ################################
 
-if use_ea_libc == true
+if use_external_stdlib == true
 	message('Compiling with Embedded Artistry libc')
-	message('Looking for libc at location: ' + ea_libc_path +
-		'.  If libc is not found, update the ea-libc-path configuration option.')
+	message('Looking for libc at location: ' + external_stdlib_path +
+		'.  If libc is not found, update the external-stdlib-path configuration option.')
 	# TODO: can we check for a file to confirm?
 
 	subdir('build/architecture')
 	message('Building C++ for target architecture: ' + target_architecture)
 	libc_target_include_directories += [
-		include_directories(ea_libc_path + '/include', is_system: true),
-		include_directories(ea_libc_path + '/printf', is_system: true),
-		include_directories(ea_libc_path + '/openlibm/include', is_system: true),
-		include_directories(ea_libc_path + '/openlibm/src', is_system: true),
-		include_directories(ea_libc_path + '/arch/' + target_architecture + '/include', is_system: true),
+		include_directories(external_stdlib_path + '/include', is_system: true),
+		include_directories(external_stdlib_path + '/printf', is_system: true),
+		include_directories(external_stdlib_path + '/openlibm/include', is_system: true),
+		include_directories(external_stdlib_path + '/openlibm/src', is_system: true),
+		include_directories(external_stdlib_path + '/arch/' + target_architecture + '/include', is_system: true),
 		include_directories('embedded-unwind/include', is_system: true)
 	]
 
 	message('Building C++ for native architecture: ' + native_architecture)
 	libc_native_include_directories += [
-		include_directories(ea_libc_path + '/include', is_system: true),
-		include_directories(ea_libc_path + '/printf', is_system: true),
-		include_directories(ea_libc_path + '/openlibm/include', is_system: true),
-		include_directories(ea_libc_path + '/openlibm/src', is_system: true),
-		include_directories(ea_libc_path + '/arch/' + native_architecture + '/include', is_system: true),
+		include_directories(external_stdlib_path + '/include', is_system: true),
+		include_directories(external_stdlib_path + '/printf', is_system: true),
+		include_directories(external_stdlib_path + '/openlibm/include', is_system: true),
+		include_directories(external_stdlib_path + '/openlibm/src', is_system: true),
+		include_directories(external_stdlib_path + '/arch/' + native_architecture + '/include', is_system: true),
 		include_directories('embedded-unwind/include', is_system: true)
 	]
 

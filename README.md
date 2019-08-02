@@ -154,13 +154,13 @@ At this point, `make` would still work.
 You can enable cross-compilation using the `--cross-file` argument when creating a new repository. This example uses `arm-none-eabi-c++` to compile `libcxx` and `libcxxabi` with the [Embedded Artistry libc](https://github.com/embeddedartistry/libc).
 
 ```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Denable-threading=false -Duse-ea-libc=true
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Denable-threading=false -Duse-external-stdlibs=true
 ```
 
 You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:
 
 ```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-ea-libc=true -Dos-header-path=../../os/threadx/include
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-external-stdlibs=true -Dos-header-path=../../os/threadx/include
 ```
 
 ### Usage
@@ -222,8 +222,8 @@ Here are the configurable options:
 * `enable-werror`: Cause the build to fail if warnings are present
 * `enable-pedantic-error`: Turn on `pedantic` warnings and errors
 * `force-32-bit`: forces 32-bit compilation instead of 64-bit
-* `use-ea-libc`: If true, the build will set flags to prevent usage of the compiler libc so the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) can supply the headers
-* `ea-libc-path`: The relative path to the root directory of the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) source tree
+* `use-external-stdlibs`: If true, the build will set flags to prevent usage of the compiler libc so the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) can supply the headers
+* `external-stdlib-path`: The relative path to the root directory of the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) source tree
 * `os-header-path`: Path to the headers for your OS, if using a custom threading solutions
 * `disable-rtti`: Build without RTTI support (excludes some C++ features such as name demangling)
 * `disable-exceptions`: Build without exception support

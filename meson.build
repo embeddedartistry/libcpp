@@ -28,6 +28,15 @@ build_os = build_machine.system()
 native_compiler = meson.get_compiler('cpp', native: true)
 target_compiler = meson.get_compiler('cpp')
 
+subdir('build/architecture')
+
+if meson.is_cross_build()
+	target_compiler = meson.get_compiler('cpp', native: false)
+	if target_compiler.get_id() == 'gcc' and target_compiler.version().version_compare('<9.0') and target_architecture == 'arm'
+		error('This project requires gcc-arm-none-eabi v9.0 or later. See README.md for more information.')
+	endif
+endif
+
 #########################
 # Process Build Options #
 #########################
@@ -407,7 +416,6 @@ if use_external_stdlib == true
 		'.  If libc is not found, update the external-stdlib-path configuration option.')
 	# TODO: can we check for a file to confirm?
 
-	subdir('build/architecture')
 	message('Building C++ for target architecture: ' + target_architecture)
 	libc_target_include_directories += [
 		include_directories(external_stdlib_path + '/include', is_system: true),

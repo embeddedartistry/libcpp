@@ -28,7 +28,6 @@ This project supplies a C++ standard library and C++ ABI library that can be use
 
 This project is based on the clang libc++ and libc++abi libraries. Alternative implementations are provided for various files to support embedded systems usage.
 
-
 The builds are highly configurable, allowing you to create a libc++ and libc++abi set that is tuned specifically to your system's needs.
 
 **[Back to top](#table-of-contents)**
@@ -52,6 +51,8 @@ This project currently builds libc++ and libc++abi for x86, x86_64, arm, and arm
         - arm-none-eabi-gcc
         - Apple clang
         - Mainline clang
+
+Note that if you are cross-compiling for ARM using the arm-none-eabi-gcc toolchain, you will need to use **version 9.0 or later**. If you cannot get this version for your platform due to package availability, you can build the most recent compiler version using the [arm-gcc-bleeding-edge](https://github.com/embeddedartistry/arm-gcc-bleeding-edge) project.
 
 #### git-lfs
 
@@ -162,6 +163,8 @@ You can enable threading support with an RTOS using an `__external_threading` he
 ```
 meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-external-stdlibs=true -Dos-header-path=../../os/threadx/include
 ```
+
+Note that if you are cross-compiling for ARM using the arm-none-eabi-gcc toolchain, you will need to use **version 9.0 or later**. If you cannot get this version for your platform due to package availability, you can build the most recent compiler version using the [arm-gcc-bleeding-edge](https://github.com/embeddedartistry/arm-gcc-bleeding-edge) project.
 
 ### Usage
 

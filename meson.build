@@ -358,6 +358,10 @@ if use_external_libc
 	if host_machine.cpu_family() == 'arm'
 		libcxxabi_host_compile_flags += ['-D__USING_SJLJ_EXCEPTIONS__']
 	endif
+
+	# Enable "baremetal" fallbacks when working with an alternate libc
+	# TODO: better name for this argument - could be split out even?
+	libcxx_conf_data.set('_BAREMETAL', true)
 else
 	message('Compiling with the built-in libc and system headers')
 	libcxxabi_files += files(
@@ -549,7 +553,6 @@ endif
 if meson.is_cross_build()
 	libcxxabi_host_compile_flags += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
 	libcxx_host_compile_flags += ['-ffreestanding']
-	libcxx_conf_data.set('_BAREMETAL', true)
 endif
 
 if force_32_bit == true

@@ -1,19 +1,22 @@
 option('use-external-stdlibs', type: 'boolean', value: false, yield: true)
 option('external-stdlib-path', type: 'string', value: '../libc', yield: true)
 option('os-header-path', type: 'string', value: '../../core', yield: true)
-option('force-32-bit', type: 'boolean', value: false, yield: true)
+option('force-32-bit', type: 'boolean', value: false, yield: true,
+    description: 'Force 32-bit compilation for libcpp')
 option('disable-rtti', type : 'boolean', value: true, yield: true)
 option('disable-exceptions', type : 'boolean', value: false, yield: true)
-option('enable-pedantic-error', type: 'boolean', value: false, yield: true)
-option('enable-werror', type: 'boolean', value: false, yield: true)
-option('use-compiler-rt', type: 'boolean', value: false, yield: true)
-option('always-enable-assert', type: 'boolean', value: true, yield: true)
+option('enable-pedantic', type: 'boolean', value: false, yield: true, 
+    description: 'Enable pedantic warnings')
+option('enable-pedantic-error', type: 'boolean', value: false, yield: true, 
+    description: 'Enable pedantic warnings and make them errors.')
+option('use-compiler-rt', type: 'boolean', value: false, yield: true,
+    description: 'Use compiler-rt to supply builtin functionality')
 option('use-llvm-libunwind', type: 'boolean', value: true, yield: true)
-option('libcxx-enable-chrono', type: 'boolean', value: true, yield: true)
 option('enable-threading', type: 'boolean', value: true, yield: true)
 option('libcxx-thread-library', type: 'combo', choices: ['', 'none', 'pthread', 'ea-framework'], value: 'pthread', yield: true)
 option('libcxx-has-external-thread-api', type: 'boolean', value: false, yield: true)
 option('libcxx-build-external-thread-api', type: 'boolean', value: false, yield: true)
+option('libcxx-enable-chrono', type: 'boolean', value: true, yield: true)
 option('libcxx-enable-filesystem', type: 'boolean', value: false, yield: true)
 option('libcxx-enable-stdinout', type: 'boolean', value: true, yield: true)
 option('libcxx-default-newdelete', type: 'boolean', value: true, yield: true)

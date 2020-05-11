@@ -577,3 +577,20 @@ libcxxabi_native = static_library('c++abi_native',
     dependencies: [install_cpp_headers_dep, libcxxabi_native_dependencies],
     native: true,
 )
+
+##########################
+# libcxxabi Dependencies #
+##########################
+
+libcxxabi_dep = declare_dependency(
+	include_directories: include_directories('include/c++abi', is_system: true),
+	link_with: libcxxabi,
+	link_args: libcxxabi_host_dep_link_args
+)
+
+libcxxabi_native_dep = declare_dependency(
+	include_directories: include_directories('include/c++abi', is_system: true),
+	link_with: libcxxabi_native,
+	link_args: libcxxabi_native_dep_link_args
+)
+

@@ -36,23 +36,26 @@ The builds are highly configurable, allowing you to create a libc++ and libc++ab
 
 This project currently builds libc++ and libc++abi for x86, x86_64, arm, and arm64 processors. All relevant library configuration options have been ported from the CMake builds. See [Configuration Options](#configuration-options) and [meson_options.txt](meson_options.txt) for the list of configurable settings.
 
+This library has also been tested with [Embedded Artistry libc](https://github.com/embeddedartistry/libc) and is used on multiple Embedded Artistry projects.
+
 **[Back to top](#table-of-contents)**
 
 ## Getting Started
 
 ### Requirements
 
+This project uses [Embedded Artistry's standard Meson build system](https://embeddedartistry.com/fieldatlas/embedded-artistrys-standardized-meson-build-system/), and dependencies are described in detail [on our website](https://embeddedartistry.com/fieldatlas/embedded-artistrys-standardized-meson-build-system/).
+
+At a minimum you will need:
+
+* [`git-lfs`](https://git-lfs.github.com), which is used to store binary files in this repository
 * [Meson](#meson-build-system) is the build system
-* [`git-lfs`][7] is used to store binary files in this repository
-* `make` is needed if you want to use the Makefile shims
-* You'll need some kind of compiler for your target system.
+* Some kind of compiler for your target system.
     - This repository has been tested with:
-        - gcc
+        - gcc-7, gcc-8, gcc-9
         - arm-none-eabi-gcc
         - Apple clang
         - Mainline clang
-
-Note that if you are cross-compiling for ARM using the arm-none-eabi-gcc toolchain, you will need to use **version 9.0 or later**. If you cannot get this version for your platform due to package availability, you can build the most recent compiler version using the [arm-gcc-bleeding-edge](https://github.com/embeddedartistry/arm-gcc-bleeding-edge) project.
 
 #### git-lfs
 
@@ -74,7 +77,7 @@ Additional installation instructions can be found on the [`git-lfs` website](htt
 
 #### Meson Build System
 
-The [Meson][meson] build system depends on `python3` and `ninja-build`.
+The [Meson](https://mesonbuild.com) build system depends on `python3` and `ninja-build`.
 
 To install on Linux:
 
@@ -135,7 +138,7 @@ make clean
 You can eliminate the generated `buildresults` folder using:
 
 ```
-make purify
+make distclean
 ```
 
 You can also use the `meson` method for compiling.
@@ -150,21 +153,35 @@ $ ninja
 
 At this point, `make` would still work.
 
-#### Cross-compiling
+You can also use  `meson` directly for compiling.
 
-You can enable cross-compilation using the `--cross-file` argument when creating a new repository. This example uses `arm-none-eabi-c++` to compile `libcxx` and `libcxxabi` with the [Embedded Artistry libc](https://github.com/embeddedartistry/libc).
-
-```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Denable-threading=false -Duse-external-stdlibs=true
-```
-
-You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:
+Create a build output folder:
 
 ```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-external-stdlibs=true -Dos-header-path=../../os/threadx/include
+meson buildresults
 ```
 
-Note that if you are cross-compiling for ARM using the arm-none-eabi-gcc toolchain, you will need to use **version 9.0 or later**. If you cannot get this version for your platform due to package availability, you can build the most recent compiler version using the [arm-gcc-bleeding-edge](https://github.com/embeddedartistry/arm-gcc-bleeding-edge) project.
+And build all targets by running
+
+```
+ninja -C buildresults
+```
+
+Cross-compilation is handled using `meson` cross files. Example files are included in the [`build/cross`](build/cross/) folder. You can write your own cross files for your specific processor by defining the toolchain, compilation flags, and linker flags. These settings will be used to compile `libc`. (or open an issue and we can help you).
+
+Cross-compilation must be configured using the meson command when creating the build output folder. For example:
+
+```
+meson buildresults --cross-file build/cross/gcc_arm_cortex-m4.txt
+```
+
+Following that, you can run `make` (at the project root) or `ninja` to build the project.
+
+Note that the standard settings may need to be adjusted when cross-compiling. For example, when using gnu-arm-none-eabi, you will likely need to set `enable-threading=false` and `libcxx-enable-chrono=false`.
+
+Also note that if you are cross-compiling for ARM using the arm-none-eabi-gcc toolchain, you will need to use **version 9.0 or later**. If you cannot get this version for your platform due to package availability, you can build the most recent compiler version using the [arm-gcc-bleeding-edge](https://github.com/embeddedartistry/arm-gcc-bleeding-edge) project.
+
+**Full instructions for building the project, using alternate toolchains, and running supporting tooling are documented in [Embedded Artistry's Standardized Meson Build System](https://embeddedartistry.com/fieldatlas/embedded-artistrys-standardized-meson-build-system/) on our website.**
 
 ### Usage
 
@@ -191,12 +208,8 @@ Then make dependencies available to your project:
 ```
 libcxx_full_dep = libcpp.get_variable('libcxx_full_dep')
 libcxx_full_native_dep = libcpp.get_variable('libcxx_full_native_dep')
-libcxx_headeronly_dep = libcpp.get_variable('libcxx_headeronly_dep')
 libcxx_header_include_dep = libcpp.get_variable('libcxx_header_include_dep')
-libcxx_extensions_include_dir = libcpp.get_variable('libcxx_extensions_include_dir')
-
-libcxxabi_dep = libcpp.get_variable('libcxxabi_dep')
-libcxxabi_native_dep = libcpp.get_variable('libcxxabi_native_dep')
+libcxx_native_header_include_dep = libcpp.get_variable('libcxx_native_header_include_dep')
 ```
 
 You can use these dependencies elsewhere in your project:
@@ -209,7 +222,6 @@ fwdemo_sim_platform_dep = declare_dependency(
         fwdemo_platform_dep,
         libmemory_native_dep,
         libc_native_dep,
-        libcxxabi_native_dep, # <--- here
         libcxx_full_native_dep, # <---- here
     ],
     sources: files('boot.cpp', 'platform.cpp'),
@@ -225,8 +237,6 @@ Here are the configurable options:
 * `enable-werror`: Cause the build to fail if warnings are present
 * `enable-pedantic-error`: Turn on `pedantic` warnings and errors
 * `force-32-bit`: forces 32-bit compilation instead of 64-bit
-* `use-external-stdlibs`: If true, the build will set flags to prevent usage of the compiler libc so the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) can supply the headers
-* `external-stdlib-path`: The relative path to the root directory of the [Embedded Artistry libc](https://github.com/embeddedartistry/libc) source tree
 * `os-header-path`: Path to the headers for your OS, if using a custom threading solutions
 * `disable-rtti`: Build without RTTI support (excludes some C++ features such as name demangling)
 * `disable-exceptions`: Build without exception support
@@ -243,6 +253,8 @@ Here are the configurable options:
 * `libcxx-default-newdelete`: Enable support for the default new/delete implementations
 * `libcxx-silent-terminate`: Enable silent termination. The default terminate handler attempts to demangle uncaught exceptions, which causes extra I/O and demangling code to be pulled in.
 * `libcxx-monotonic-clock`: Enable/disable support for the monotonic clock (can only be disabled if threading is disabled)
+ `use-libc-subproject`: When true, use the subproject defined in the libc-subproject option. An alternate approach is to override c_stdlib in your cross files.
+* `libc-subproject`: This array is used in combination with `use-libc-subproject`. The first entry is the subproject name. The second is the cross-compilation dependency to use. The third value is optional. If used, it is a native dependency to use with native library targets.
 
 Options can be specified using `-D` and the option name:
 
@@ -255,6 +267,14 @@ The same style works with `meson configure`:
 ```
 cd buildresults
 meson configure -Denable-werror=true
+```
+
+### Threading
+
+You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:
+
+```
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-external-stdlibs=true -Dos-header-path=../../os/threadx/include
 ```
 
 ### Blocking new/delete
@@ -274,21 +294,32 @@ meson configure -Dlibcxx-default-newdelete=false
 
 If you are using libcpp as a subproject, you can specify this setting in the containing project options.
 
+### Using a Custom Libc
+
+This project is designed to be used along with a `libc` implementation. If you are using this library, you may not be using the standard `libc` that ships with you compiler. This library needs to know about the particular `libc` implementation during its build, in case there are important differences in definitions.
+
+There are two ways to tell this library about a `libc`:
+
+1. [Override `c_stdlib` in a cross-file](https://mesonbuild.com/Cross-compilation.html#using-a-custom-standard-library), which will be automatically used when building this library.
+2. Set `use-libc-subproject` to `true`
+    1. By default, this will use the [Embedded Artistry libc](https://github.com/embeddedartistry/libc)
+    2. You can specify another Meson subproject by configuring `libc-subproject`. This is an array: the first value is the subproject name, the second the libc dependency variable, and the third is an optional native dependency that will be used with native library variants.
+
+NOTE: External libc dependencies are only used for building the library. They are not forwarded through dependencies. You are expected to handle that with the rest of your program.
+
 ## Versioning
 
 This project itself is unversioned and simply pulls in the latest libc++ and libc++abi commits periodically.
 
-## How to Get Help
+## Need help?
 
-Provide any instructions or contact information for users who need to get further help with your project.
+If you need further assistance or have any questions, please [file a GitHub Issue](https://github.com/embeddedartistry/libmemory/issues/new) or send us an email using the [Embedded Artistry Contact Form](http://embeddedartistry.com/contact).
+
+You can also reach out on Twitter: [\@mbeddedartistry](https://twitter.com/mbeddedartistry/).
 
 ## Contributing
 
-Provide details about how people can contribute to your project. If you have a contributing guide, mention it here. e.g.:
-
-We encourage public contributions! Please review [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and development process.
-
-**[Back to top](#table-of-contents)**
+If you are interested in contributing to this project, please read our [contributing guidelines](docs/CONTRIBUTING.md).
 
 ## License
 

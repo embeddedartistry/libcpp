@@ -51,20 +51,6 @@ all: default
 default: | $(CONFIGURED_BUILD_DEP)
 	$(Q)ninja -C $(BUILDRESULTS)
 
-.PHONY: test
-test: | $(CONFIGURED_BUILD_DEP)
-	$(Q)ninja -C $(BUILDRESULTS) clear-test-results
-	$(Q)ninja -C $(BUILDRESULTS) test
-
-.PHONY: docs
-docs: | $(CONFIGURED_BUILD_DEP)
-	$(Q)ninja -C $(BUILDRESULTS) docs
-
-.PHONY: package
-package: default docs
-	$(Q)ninja -C $(BUILDRESULTS) package
-	$(Q)ninja -C $(BUILDRESULTS) package-native
-
 # Manually Reconfigure a target, esp. with new options
 .PHONY: reconfig
 reconfig:
@@ -73,48 +59,6 @@ reconfig:
 # Runs whenever the build has not been configured successfully
 $(CONFIGURED_BUILD_DEP):
 	$(Q) meson $(BUILDRESULTS) $(INTERNAL_OPTIONS) $(OPTIONS)
-
-.PHONY: cppcheck
-cppcheck: | $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) cppcheck
-
-.PHONY: cppcheck-xml
-cppcheck-xml: | $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) cppcheck-xml
-
-.PHONY: complexity
-complexity: | $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) complexity
-
-.PHONY: complexity-xml
-complexity-xml: | $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) complexity-xml
-
-.PHONY: complexity-full
-complexity-full: | $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) complexity-full
-
-.PHONY: scan-build
-scan-build: $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) scan-build
-
-.PHONY: tidy
-tidy: $(CONFIGURED_BUILD_DEP)
-	$(Q) ninja -C $(BUILDRESULTS) clang-tidy
-
-.PHONY: coverage
-coverage:
-	$(Q)if [ ! -e "$(BUILDRESULTS)/coverage/build.ninja" ]; then meson $(BUILDRESULTS)/coverage $(INTERNAL_OPTIONS) $(OPTIONS) -Db_coverage=true; fi
-	$(Q) ninja -C $(BUILDRESULTS)/coverage test
-	$(Q) ninja -C $(BUILDRESULTS)/coverage coverage
-
-.PHONY: format
-format: $(CONFIGURED_BUILD_DEP)
-	$(Q)ninja -C $(BUILDRESULTS) format
-
-.PHONY : format-patch
-format-patch: $(CONFIGURED_BUILD_DEP)
-	$(Q)ninja -C $(BUILDRESULTS) format-patch
 
 .PHONY: clean
 clean:
@@ -149,23 +93,6 @@ help :
 	@echo "         and address,undefined' as a combined option"
 	@echo "Targets:"
 	@echo "  default: Builds all default targets ninja knows about"
-	@echo "  tests: Build and run unit test programs"
-	@echo "  docs: Generate documentation"
-	@echo "  package: Build the project, generates docs, and create a release package"
 	@echo "  clean: cleans build artifacts, keeping build files in place"
 	@echo "  distclean: removes the configured build output directory"
 	@echo "  reconfig: Reconfigure an existing build output folder with new settings"
-	@echo "  Code Formating:"
-	@echo "    format: runs clang-format on codebase"
-	@echo "    format-patch: generates a patch file with formatting changes"
-	@echo "  Static Analysis:"
-	@echo "    cppcheck: runs cppcheck"
-	@echo "    cppcheck-xml: runs cppcheck and generates an XML report (for build servers)"
-	@echo "    scan-build: runs clang static analysis"
-	@echo "    complexity: runs complexity analysis with lizard, only prints violations"
-	@echo "    complexity-full: runs complexity analysis with lizard, prints full report"
-	@echo "    complexity-xml: runs complexity analysis with lizard, generates XML report"
-	@echo "        (for build servers)"
-	@echo "    coverage: runs code coverage analysis and generates an HTML & XML reports"
-	@echo "    tidy: runs clang-tidy linter"
-

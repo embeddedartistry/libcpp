@@ -2,3 +2,4 @@
 
 subdir('baremetal')
 subdir('newlib')
+subdir('runtime')

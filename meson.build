@@ -308,6 +308,7 @@ libc_native_dep = []
 
 if use_external_libc
 	message('Using external libc specified in libc-subproject option.')
+	message('If you are using Embedded Artistry libc, note that iostreams and locale are not supported.')
 	libc_array = get_option('libc-subproject')
 	libc_subproject = subproject(libc_array[0])
 
@@ -335,9 +336,6 @@ if use_external_libc
 
 	libcxxabi_include_directories += include_directories('embedded-unwind/include', is_system: true)
 
-	# TODO: REFACTOR TO SEPARATE BAREMETAL OPTION
-	libcxx_conf_data.set('_BAREMETAL', true)
-
 	libcxxabi_files += files(
 		'src/c++abi/abort_message.cpp',
 		'src/c++abi/cxa_guard.cpp',
@@ -360,11 +358,6 @@ if use_external_libc
 	if host_machine.cpu_family() == 'arm'
 		libcxxabi_host_compile_flags += ['-D__USING_SJLJ_EXCEPTIONS__']
 	endif
-
-
-	# TODO make these options to disable
-	message('iostreams are not supported with EA libc')
-	message('locale is not supported with EA libc')
 else
 	message('Compiling with the built-in libc and system headers')
 	libcxxabi_files += files(
@@ -555,6 +548,7 @@ endif
 if meson.is_cross_build()
 	libcxxabi_host_compile_flags += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
 	libcxx_host_compile_flags += ['-ffreestanding']
+	libcxx_conf_data.set('_BAREMETAL', true)
 endif
 
 if force_32_bit == true

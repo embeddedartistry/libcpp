@@ -2,6 +2,7 @@
 
 mkdir = find_program('mkdir')
 cp = find_program('cp')
+cat = find_program('cat')
 
 ### Generate and Install Config Header ###
 
@@ -20,7 +21,7 @@ libcpp_config_headers = files(
 
 generate_libpp_config_header = custom_target(
   'generate_libpp_config_header',
-  command: [ 'cat', '@INPUT@' ],
+  command: [ cat, '@INPUT@' ],
   capture: true,
   input: libcpp_config_headers,
   output: '__config',

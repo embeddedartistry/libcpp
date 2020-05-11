@@ -266,6 +266,14 @@ libcxxabi_include_directories = [
 ]
 libcxx_include_directories = []
 
+libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
+libcxx_include_directories += [
+	include_directories('include/c++abi', is_system: true),
+	include_directories('include/c++', is_system: true),
+	libcxx_extensions_include_dir
+]
+
+# Variables to hold target dependencies that are triggered by build options
 libcxxabi_host_dependencies = []
 libcxxabi_native_dependencies = []
 libcxx_host_dependencies = []
@@ -594,3 +602,83 @@ libcxxabi_native_dep = declare_dependency(
 	link_args: libcxxabi_native_dep_link_args
 )
 
+##########################
+# libcxx Library Targets #
+##########################
+
+# Note that due to the behavior of #include_next and -isystem, you need to ensure that
+# the C++ includes are _last_ to be added to a target so that they are first in the search list
+
+libcpp = static_library('c++',
+    libcpp_core_files,
+    cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
+    include_directories: libcxx_include_directories,
+    link_args: libcxx_link_flags,
+    dependencies: [
+	    install_cpp_headers_dep,
+	    libcxx_host_dependencies,
+    ],
+)
+
+libcpp_native = static_library('c++_native',
+    libcpp_core_files,
+    cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
+    include_directories: libcxx_include_directories,
+    link_args: libcxx_link_flags,
+    dependencies: [
+    	install_cpp_headers_dep,
+    	libcxx_native_dependencies,
+    ],
+    native: true
+)
+
+libcpp_experimental = static_library('c++experimental',
+    libcpp_experimental_files,
+    cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
+    include_directories: libcxx_include_directories,
+    link_args: libcxx_link_flags,
+    dependencies: [
+    	install_cpp_headers_dep,
+    	libcxx_host_dependencies
+    ],
+)
+
+libcpp_experimental_native = static_library('c++experimental_native',
+    libcpp_experimental_files,
+    cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
+    include_directories: libcxx_include_directories,
+    link_args: libcxx_link_flags,
+    dependencies: [
+    	install_cpp_headers_dep,
+    	libcxx_native_dependencies
+    ],
+    native: true
+)
+
+if enable_filesystem == true
+	libcpp_fs = static_library('c++fs',
+		libcpp_filesystem_files,
+		cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
+		include_directories: libcxx_include_directories,
+		link_args: libcxx_link_flags,
+		dependencies: [
+			install_cpp_headers_dep,
+			libcxx_host_dependencies
+		],
+	)
+
+	libcpp_fs_native = static_library('c++fs_native',
+		libcpp_filesystem_files,
+		cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
+		include_directories: libcxx_include_directories,
+		link_args: libcxx_link_flags,
+		dependencies: [
+			install_cpp_headers_dep,
+			libcxx_native_dependencies
+		],
+		native: true
+	)
+else
+	libcpp_fs = disabler()
+	libcpp_fs_native = disabler()
+endif

@@ -1,5 +1,3 @@
-option('use-external-stdlibs', type: 'boolean', value: false, yield: true)
-option('external-stdlib-path', type: 'string', value: '../libc', yield: true)
 option('os-header-path', type: 'string', value: '../../core', yield: true)
 option('force-32-bit', type: 'boolean', value: false, yield: true,
     description: 'Force 32-bit compilation for libcpp')
@@ -22,3 +20,9 @@ option('libcxx-enable-stdinout', type: 'boolean', value: true, yield: true)
 option('libcxx-default-newdelete', type: 'boolean', value: true, yield: true)
 option('libcxx-silent-terminate', type: 'boolean', value: true, yield: true)
 option('libcxx-monotonic-clock', type: 'boolean', value: true, yield: true)
+option('use-libc-subproject', type: 'boolean', value: true, yield: true,
+    description: 'When true, use the subproject defined in the libc-subproject option. An alternate approach is to override c_stdlib in your cross files.')
+option('libc-subproject', type: 'array', 
+    value: ['libc', 'libc_dep', 'libc_hosted_native_dep'],
+    yield: true, 
+    description: 'This array is used in combination with use-libc-subproject. The first entry is the subproject name. The second is the cross-compilation dependency to use. The third value is optional. If used, it is a native dependency to use with native library targets.')

@@ -11,14 +11,12 @@ project('Embedded Artistry libcpp',
 		'optimization=2',
 	],
 	license: 'MIT',
-	meson_version: '>0.51.0')
+	meson_version: '>=0.52.0')
 
 #######################
 # Read Build Settings #
 #######################
 
-use_external_stdlib = get_option('use-external-stdlibs')
-external_stdlib_path = get_option('external-stdlib-path')
 disable_rtti = get_option('disable-rtti')
 disable_exceptions = get_option('disable-exceptions')
 use_compiler_rt = get_option('use-compiler-rt')
@@ -35,6 +33,7 @@ force_32_bit = get_option('force-32-bit')
 enable_chrono = get_option('libcxx-enable-chrono')
 thread_library = get_option('libcxx-thread-library')
 os_header_path = get_option('os-header-path')
+use_external_libc = get_option('use-libc-subproject')
 
 # The default terminate handler attempts to demangle uncaught exceptions, which
 # causes extra I/O and demangling code to be pulled in.
@@ -146,7 +145,6 @@ libcxx_native_compile_flags = native_cpp_compiler.get_supported_arguments(libcxx
 
 # Reset the variables for new common flags
 libcxxabi_compile_flags = [
-	'-nostdinc++',
 	# Let C++ library know we are building libcxxabi
 	'-D_LIBCXXABI_BUILDING_LIBRARY',
 	# Bring back `std::unexpected`, which is removed in C++17, to support
@@ -157,7 +155,6 @@ libcxxabi_compile_flags = [
 ]
 
 libcxx_compile_flags = [
-	'-nostdinc++',
 	'-fvisibility-inlines-hidden',
 	'-fvisibility=hidden',
 	'-D_LIBCPP_BUILD_STATIC',
@@ -219,7 +216,6 @@ libcxxabi_files = [
 		'libcxxabi/src/fallback_malloc.cpp',
 		'libcxxabi/src/private_typeinfo.cpp',
 		'libcxxabi/src/stdlib_exception.cpp',
-		'libcxxabi/src/stdlib_stdexcept.cpp',
 		'libcxxabi/src/stdlib_typeinfo.cpp',
 	)
 ]
@@ -243,7 +239,6 @@ libcpp_core_files = [
 		'libcxx/src/optional.cpp',
 		'libcxx/src/regex.cpp',
 		'libcxx/src/shared_mutex.cpp',
-		'libcxx/src/stdexcept.cpp',
 		'libcxx/src/strstream.cpp',
 		'libcxx/src/system_error.cpp',
 		'libcxx/src/typeinfo.cpp',
@@ -255,7 +250,11 @@ libcpp_core_files = [
 ]
 
 if enable_chrono == true
-	libcpp_core_files += files('libcxx/src/chrono.cpp')
+	if use_external_libc
+		libcpp_core_files += files('src/c++/chrono.cpp')
+	else
+		libcpp_core_files += files('libcxx/src/chrono.cpp')
+	endif
 endif
 
 libcpp_experimental_files = files('libcxx/src/experimental/memory_resource.cpp')
@@ -296,42 +295,53 @@ libcxx_conf_data.set('_LIBCPP_ABI_VERSION', '1')
 # The inline ABI namespace used by libc++. It defaults to __n where `n` is the current ABI version.
 libcxx_conf_data.set('_LIBCPP_ABI_NAMESPACE', '__1')
 
-################################
-# Apply Project Option Changes #
-################################
+########################
+# External libc Option #
+########################
 
-if use_external_stdlib == true
-	message('Compiling with Embedded Artistry libc')
-	message('Looking for libc at location: ' + external_stdlib_path +
-		'.  If libc is not found, update the external-stdlib-path configuration option.')
-	# TODO: can we check for a file to confirm?
+# NOTE: External libc dependencies are only used for building the library.
+# They are not forwarded through dependencies. You are expected to handle
+# That with the rest of your program.
 
-	message('Building C++ for target architecture: ' + target_architecture)
-	libc_target_include_directories += [
-		include_directories(external_stdlib_path + '/include', is_system: true),
-		include_directories(external_stdlib_path + '/printf', is_system: true),
-		include_directories(external_stdlib_path + '/openlibm/include', is_system: true),
-		include_directories(external_stdlib_path + '/openlibm/src', is_system: true),
-		include_directories(external_stdlib_path + '/arch/' + target_architecture + '/include', is_system: true),
-		include_directories('embedded-unwind/include', is_system: true)
-	]
+libc_dep = []
+libc_native_dep = []
 
-	message('Building C++ for native architecture: ' + native_architecture)
-	libc_native_include_directories += [
-		include_directories(external_stdlib_path + '/include', is_system: true),
-		include_directories(external_stdlib_path + '/printf', is_system: true),
-		include_directories(external_stdlib_path + '/openlibm/include', is_system: true),
-		include_directories(external_stdlib_path + '/openlibm/src', is_system: true),
-		include_directories(external_stdlib_path + '/arch/' + native_architecture + '/include', is_system: true),
-		include_directories('embedded-unwind/include', is_system: true)
-	]
+if use_external_libc
+	message('Using external libc specified in libc-subproject option.')
+	libc_array = get_option('libc-subproject')
+	libc_subproject = subproject(libc_array[0])
+
+	libc_dep = libc_subproject.get_variable(libc_array[1])
+	# Only pull in include directories + compile arguments
+	libc_dep = libc_dep.partial_dependency(includes: true, compile_args: true)
+
+	if libc_array.length() > 2
+		libc_native_dep = libc_subproject.get_variable(libc_array[2])
+		libc_native_dep = libc_native_dep.partial_dependency(includes: true, compile_args: true)
+		if(build_machine.system() == 'darwin')
+			# -nostdinc will mess with availabilty.h and a few other headers, so we
+			# reference local includes
+			libc_native_dep = [
+				libc_native_dep,
+				declare_dependency(
+					include_directories: include_directories('include/apple', is_system: true),
+				)
+			]
+		endif
+	endif
 
 	libcxxabi_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE', '-DLIBCXXABI_USE_LLVM_UNWINDER']
 	libcxx_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE']
+
+	libcxxabi_include_directories += include_directories('embedded-unwind/include', is_system: true)
+
+	# TODO: REFACTOR TO SEPARATE BAREMETAL OPTION
 	libcxx_conf_data.set('_BAREMETAL', true)
 
 	libcxxabi_files += files(
 		'src/c++abi/abort_message.cpp',
+		'src/c++abi/cxa_guard.cpp',
+		'src/c++abi/stdlib_stdexcept.cpp',
 	)
 
 	if disable_rtti == false
@@ -343,25 +353,30 @@ if use_external_stdlib == true
 		'src/c++/locale.cpp',
 		'src/c++/string.cpp',
 		'src/c++/random.cpp',
+		'src/c++/stdexcept.cpp',
 	)
 
 	# TODO: build Unwind-sjlj_pthread.c
-	if target_architecture == 'arm'
-		libcxxabi_cross_args += ['-D__USING_SJLJ_EXCEPTIONS__']
-		libcxxabi_cross_args += ['-nostdinc', '-fno-builtin']
-		libcxx_host_compile_flags += ['-nostdinc', '-fno-builtin']
+	if host_machine.cpu_family() == 'arm'
+		libcxxabi_host_compile_flags += ['-D__USING_SJLJ_EXCEPTIONS__']
 	endif
 
+
+	# TODO make these options to disable
 	message('iostreams are not supported with EA libc')
 	message('locale is not supported with EA libc')
 else
-	message('Compiling with the compiler or sysroot libc headers')
+	message('Compiling with the built-in libc and system headers')
 	libcxxabi_files += files(
 		'libcxxabi/src/abort_message.cpp',
+		'libcxxabi/src/stdlib_stdexcept.cpp',
+		'libcxxabi/src/cxa_guard.cpp',
 	)
 
 	if disable_rtti == false
-		libcxxabi_files += files('libcxxabi/src/cxa_demangle.cpp')
+		libcxxabi_files += files(
+			'libcxxabi/src/cxa_demangle.cpp',
+		)
 	endif
 
 	libcpp_core_files += files(
@@ -370,8 +385,16 @@ else
 		'libcxx/src/locale.cpp',
 		'libcxx/src/random.cpp',
 		'libcxx/src/string.cpp',
+		'libcxx/src/stdexcept.cpp',
 	)
+
+	libcxx_compile_flags += '-nostdinc++'
+	libcxxabi_compile_flags += '-nostdinc++'
 endif
+
+################################
+# Apply Project Option Changes #
+################################
 
 if disable_exceptions == true
 	message('Exceptions are disabled')
@@ -450,7 +473,6 @@ if enable_threads == true
 			libcxx_host_dependencies += libthread
 
 			libcpp_core_files += files('src/c++/thread.cpp')
-			libcxxabi_files += files('libcxxabi/src/cxa_guard.cpp')
 
 			if libthread_native.found()
 				libcxxabi_native_dependencies += libthread_native
@@ -469,9 +491,6 @@ if enable_threads == true
 		libcxx_include_directories += include_directories(os_header_path, is_system: true)
 
 		libcpp_core_files += files('src/c++/thread.cpp')
-
-		# We can't ensure that semaphores and mutexes are safe. We use atomics.
-		libcxxabi_files += files('src/lightabi/cxa_guard.cpp')
 
 		if libthread.found()
 			message('Enabling pthread support for the native C++ library')
@@ -506,7 +525,8 @@ if enable_threads == true
 			libcxx_include_directories += include_directories(os_header_path, is_system: true)
 		endif
 
-		libcxxabi_files += files('src/c++abi/cxa_guard.cpp')
+		# TODO: test - does the new logic break in this case, and should we reactivate this?
+		#libcxxabi_files += files('src/c++abi/cxa_guard.cpp')
 	endif
 
 	if host_os != 'darwin' and host_os != 'windows'
@@ -525,7 +545,6 @@ else
 	message('Building without threading support.')
 	libcxx_conf_data.set('_LIBCPP_HAS_NO_THREADS', true)
 	libcxxabi_compile_flags += '-D_LIBCXXABI_HAS_NO_THREADS'
-	libcxxabi_files += files('libcxxabi/src/cxa_guard.cpp')
 endif
 
 # monotonic clock can only be disabled if there is no threading
@@ -572,23 +591,41 @@ subdir('include')
 #############################
 
 # Note that due to the behavior of #include_next and -isystem, you need to ensure that
-# the C++ includes are _last_ to be added to a target so that they are first in the search list
+# the C++ includes are _last_ to be added to a target so that they are first in the search list.
+# This is a helper variable that is used to control include directory order.
+libcxxabi_include_dep = declare_dependency(
+	include_directories: libcxxabi_include_directories,
+)
 
 libcxxabi = static_library('c++abi',
     libcxxabi_files,
-    include_directories: libcxxabi_include_directories,
     cpp_args: libcxxabi_compile_flags + libcxxabi_host_compile_flags,
     link_args: libcxxabi_link_flags,
-    dependencies: [install_cpp_headers_dep, libcxxabi_host_dependencies],
+    dependencies: [
+    	install_cpp_headers_dep,
+    	libcxxabi_host_dependencies,
+    	libcxxabi_header_deps,
+    	# libc dep must come bfore libcxxabi_include_dep
+    	# for proper include directory ordering
+    	libc_dep,
+    	libcxxabi_include_dep,
+    ],
     build_by_default: meson.is_subproject() == false,
 )
 
 libcxxabi_native = static_library('c++abi_native',
     libcxxabi_files + libcxxabi_native_files,
-    include_directories: libcxxabi_include_directories,
     cpp_args: libcxxabi_compile_flags + libcxxabi_native_compile_flags,
     link_args: libcxxabi_link_flags,
-    dependencies: [install_cpp_headers_dep, libcxxabi_native_dependencies],
+    dependencies: [
+    	install_cpp_headers_dep,
+    	libcxxabi_native_dependencies,
+    	libcxxabi_header_deps,
+    	# libc dep must come bfore libcxxabi_include_dep
+    	# for proper include directory ordering
+    	libc_native_dep,
+    	libcxxabi_include_dep,
+    ],
     native: true,
     build_by_default: meson.is_subproject() == false,
 )
@@ -614,16 +651,21 @@ libcxxabi_native_dep = declare_dependency(
 ##########################
 
 # Note that due to the behavior of #include_next and -isystem, you need to ensure that
-# the C++ includes are _last_ to be added to a target so that they are first in the search list
+# the C++ includes are _last_ to be added to a target so that they are first in the search list.
+# This is a helper variable that is used to control include directory order.
+libcxx_include_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+)
 
 libcpp = static_library('c++',
     libcpp_core_files,
     cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
-    include_directories: libcxx_include_directories,
     link_args: libcxx_link_flags,
     dependencies: [
 	    install_cpp_headers_dep,
 	    libcxx_host_dependencies,
+	    libc_dep,
+	    libcxx_include_dep
     ],
     build_by_default: meson.is_subproject() == false,
 )
@@ -631,11 +673,12 @@ libcpp = static_library('c++',
 libcpp_native = static_library('c++_native',
     libcpp_core_files,
     cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
-    include_directories: libcxx_include_directories,
     link_args: libcxx_link_flags,
     dependencies: [
     	install_cpp_headers_dep,
     	libcxx_native_dependencies,
+    	libc_native_dep,
+    	libcxx_include_dep
     ],
     native: true,
     build_by_default: meson.is_subproject() == false,
@@ -644,11 +687,12 @@ libcpp_native = static_library('c++_native',
 libcpp_experimental = static_library('c++experimental',
     libcpp_experimental_files,
     cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
-    include_directories: libcxx_include_directories,
     link_args: libcxx_link_flags,
     dependencies: [
     	install_cpp_headers_dep,
-    	libcxx_host_dependencies
+    	libcxx_host_dependencies,
+    	libc_dep,
+    	libcxx_include_dep
     ],
     build_by_default: meson.is_subproject() == false,
 )
@@ -656,11 +700,12 @@ libcpp_experimental = static_library('c++experimental',
 libcpp_experimental_native = static_library('c++experimental_native',
     libcpp_experimental_files,
     cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
-    include_directories: libcxx_include_directories,
     link_args: libcxx_link_flags,
     dependencies: [
     	install_cpp_headers_dep,
-    	libcxx_native_dependencies
+    	libcxx_native_dependencies,
+    	libc_native_dep,
+    	libcxx_include_dep
     ],
     native: true,
     build_by_default: meson.is_subproject() == false,
@@ -670,11 +715,12 @@ if enable_filesystem == true
 	libcpp_fs = static_library('c++fs',
 		libcpp_filesystem_files,
 		cpp_args: libcxx_compile_flags + libcxx_host_compile_flags,
-		include_directories: libcxx_include_directories,
 		link_args: libcxx_link_flags,
 		dependencies: [
 			install_cpp_headers_dep,
-			libcxx_host_dependencies
+			libcxx_host_dependencies,
+			libc_dep,
+			libcxx_include_dep
 		],
 		build_by_default: meson.is_subproject() == false,
 	)
@@ -682,11 +728,12 @@ if enable_filesystem == true
 	libcpp_fs_native = static_library('c++fs_native',
 		libcpp_filesystem_files,
 		cpp_args: libcxx_compile_flags + libcxx_native_compile_flags,
-		include_directories: libcxx_include_directories,
 		link_args: libcxx_link_flags,
 		dependencies: [
 			install_cpp_headers_dep,
-			libcxx_native_dependencies
+			libcxx_native_dependencies,
+			libc_native_dep,
+			libcxx_include_dep
 		],
 		native: true,
 		build_by_default: meson.is_subproject() == false,
@@ -706,6 +753,7 @@ libcxx_full_dep = declare_dependency(
 	dependencies: [
 		install_cpp_headers_dep,
 		libcxxabi_dep,
+		libc_dep
 	],
 	compile_args: libcxx_dep_compile_flags,
 	link_args: libcxx_host_dep_link_flags
@@ -716,7 +764,8 @@ libcxx_full_native_dep = declare_dependency(
 	link_with: [libcpp_native, libcpp_experimental_native],
 	dependencies: [
 		install_cpp_headers_dep,
-		libcxxabi_native_dep
+		libcxxabi_native_dep,
+		libc_native_dep
 	],
 	compile_args: libcxx_dep_compile_flags,
 	link_args: libcxx_native_dep_link_flags
@@ -725,7 +774,10 @@ libcxx_full_native_dep = declare_dependency(
 libcxx_filesystem_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: libcpp_fs,
-	dependencies: install_cpp_headers_dep,
+	dependencies: [
+		install_cpp_headers_dep,
+		libc_dep,
+	],
 	compile_args: libcxx_dep_compile_flags,
 	link_args: libcxx_host_dep_link_flags
 )
@@ -733,13 +785,28 @@ libcxx_filesystem_dep = declare_dependency(
 libcxx_filesystem_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	link_with: libcpp_fs_native,
-	dependencies: install_cpp_headers_dep,
+	dependencies: [
+		install_cpp_headers_dep,
+		libc_native_dep
+	],
 	compile_args: libcxx_dep_compile_flags,
 	link_args: libcxx_native_dep_link_flags
 )
 
 libcxx_header_include_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
-	dependencies: install_cpp_headers_dep,
+	dependencies: [
+		install_cpp_headers_dep,
+		libc_dep,
+	],
+	compile_args: libcxx_dep_compile_flags
+)
+
+libcxx_native_header_include_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	dependencies: [
+		install_cpp_headers_dep,
+		libc_native_dep,
+	],
 	compile_args: libcxx_dep_compile_flags
 )

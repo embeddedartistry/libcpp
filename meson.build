@@ -194,8 +194,12 @@ libcxx_link_flags = [
 	common_link_flags,
 ]
 
-libcxxabi_host_dep_link_args = common_link_flags
-libcxxabi_native_dep_link_args = common_link_flags
+libcxx_host_dep_link_flags = common_link_flags
+libcxx_native_dep_link_flags = common_link_flags
+
+libcxx_dep_compile_flags = [
+	'-nostdinc++',
+]
 
 ##########################
 # Set Default File Lists #
@@ -264,10 +268,8 @@ libcxxabi_include_directories = [
 	include_directories('include/c++abi/', is_system: true),
 	include_directories('include/c++/', is_system: true)
 ]
-libcxx_include_directories = []
-
 libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
-libcxx_include_directories += [
+libcxx_include_directories = [
 	include_directories('include/c++abi', is_system: true),
 	include_directories('include/c++', is_system: true),
 	libcxx_extensions_include_dir
@@ -543,7 +545,7 @@ if host_cpp_compiler.has_function('__cxa_thread_atexit_impl')
 elif host_machine.system() == 'darwin'
 	# On OS X, clang doesn't handle weak linking the way we expect
 	# So we'll work around it by undefining the weak symbol
-	libcxxabi_host_dep_link_args += '-Wl,-U,___cxa_thread_atexit_impl'
+	libcxx_host_dep_link_flags += '-Wl,-U,___cxa_thread_atexit_impl'
 endif
 
 if native_cpp_compiler.has_function('__cxa_thread_atexit_impl')
@@ -551,7 +553,7 @@ if native_cpp_compiler.has_function('__cxa_thread_atexit_impl')
 elif build_machine.system() == 'darwin'
 	# On OS X, clang doesn't handle weak linking the way we expect
 	# So we'll work around it by undefining the weak symbol
-	libcxxabi_native_dep_link_args += '-Wl,-U,___cxa_thread_atexit_impl'
+	libcxx_native_dep_link_flags += '-Wl,-U,___cxa_thread_atexit_impl'
 endif
 
 ###################
@@ -593,13 +595,13 @@ libcxxabi_native = static_library('c++abi_native',
 libcxxabi_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi,
-	link_args: libcxxabi_host_dep_link_args
+	link_args: libcxx_host_dep_link_flags
 )
 
 libcxxabi_native_dep = declare_dependency(
 	include_directories: include_directories('include/c++abi', is_system: true),
 	link_with: libcxxabi_native,
-	link_args: libcxxabi_native_dep_link_args
+	link_args: libcxx_native_dep_link_flags
 )
 
 ##########################
@@ -682,3 +684,51 @@ else
 	libcpp_fs = disabler()
 	libcpp_fs_native = disabler()
 endif
+
+#######################
+# libcxx Dependencies #
+#######################
+
+libcxx_full_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	link_with: [libcpp, libcpp_experimental],
+	dependencies: [
+		install_cpp_headers_dep,
+		libcxxabi_dep,
+	],
+	compile_args: libcxx_dep_compile_flags,
+	link_args: libcxx_host_dep_link_flags
+)
+
+libcxx_full_native_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	link_with: [libcpp_native, libcpp_experimental_native],
+	dependencies: [
+		install_cpp_headers_dep,
+		libcxxabi_native_dep
+	],
+	compile_args: libcxx_dep_compile_flags,
+	link_args: libcxx_native_dep_link_flags
+)
+
+libcxx_filesystem_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	link_with: libcpp_fs,
+	dependencies: install_cpp_headers_dep,
+	compile_args: libcxx_dep_compile_flags,
+	link_args: libcxx_host_dep_link_flags
+)
+
+libcxx_filesystem_native_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	link_with: libcpp_fs_native,
+	dependencies: install_cpp_headers_dep,
+	compile_args: libcxx_dep_compile_flags,
+	link_args: libcxx_native_dep_link_flags
+)
+
+libcxx_header_include_dep = declare_dependency(
+	include_directories: libcxx_include_directories,
+	dependencies: install_cpp_headers_dep,
+	compile_args: libcxx_dep_compile_flags
+)

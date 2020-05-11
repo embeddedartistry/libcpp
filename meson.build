@@ -577,6 +577,7 @@ libcxxabi = static_library('c++abi',
     cpp_args: libcxxabi_compile_flags + libcxxabi_host_compile_flags,
     link_args: libcxxabi_link_flags,
     dependencies: [install_cpp_headers_dep, libcxxabi_host_dependencies],
+    build_by_default: meson.is_subproject() == false,
 )
 
 libcxxabi_native = static_library('c++abi_native',
@@ -586,6 +587,7 @@ libcxxabi_native = static_library('c++abi_native',
     link_args: libcxxabi_link_flags,
     dependencies: [install_cpp_headers_dep, libcxxabi_native_dependencies],
     native: true,
+    build_by_default: meson.is_subproject() == false,
 )
 
 ##########################
@@ -620,6 +622,7 @@ libcpp = static_library('c++',
 	    install_cpp_headers_dep,
 	    libcxx_host_dependencies,
     ],
+    build_by_default: meson.is_subproject() == false,
 )
 
 libcpp_native = static_library('c++_native',
@@ -631,7 +634,8 @@ libcpp_native = static_library('c++_native',
     	install_cpp_headers_dep,
     	libcxx_native_dependencies,
     ],
-    native: true
+    native: true,
+    build_by_default: meson.is_subproject() == false,
 )
 
 libcpp_experimental = static_library('c++experimental',
@@ -643,6 +647,7 @@ libcpp_experimental = static_library('c++experimental',
     	install_cpp_headers_dep,
     	libcxx_host_dependencies
     ],
+    build_by_default: meson.is_subproject() == false,
 )
 
 libcpp_experimental_native = static_library('c++experimental_native',
@@ -654,7 +659,8 @@ libcpp_experimental_native = static_library('c++experimental_native',
     	install_cpp_headers_dep,
     	libcxx_native_dependencies
     ],
-    native: true
+    native: true,
+    build_by_default: meson.is_subproject() == false,
 )
 
 if enable_filesystem == true
@@ -667,6 +673,7 @@ if enable_filesystem == true
 			install_cpp_headers_dep,
 			libcxx_host_dependencies
 		],
+		build_by_default: meson.is_subproject() == false,
 	)
 
 	libcpp_fs_native = static_library('c++fs_native',
@@ -678,7 +685,8 @@ if enable_filesystem == true
 			install_cpp_headers_dep,
 			libcxx_native_dependencies
 		],
-		native: true
+		native: true,
+		build_by_default: meson.is_subproject() == false,
 	)
 else
 	libcpp_fs = disabler()

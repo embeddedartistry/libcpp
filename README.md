@@ -172,7 +172,7 @@ Cross-compilation is handled using `meson` cross files. Example files are includ
 Cross-compilation must be configured using the meson command when creating the build output folder. For example:
 
 ```
-meson buildresults --cross-file build/cross/gcc_arm_cortex-m4.txt
+meson buildresults  --cross-file build/cross/arm.txt --cross-file build/cross/gcc_arm_cortex-m4.txt
 ```
 
 Following that, you can run `make` (at the project root) or `ninja` to build the project.
@@ -274,7 +274,7 @@ meson configure -Denable-werror=true
 You can enable threading support with an RTOS using an `__external_threading` header. Supply the include path to your RTOS headers:
 
 ```
-meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Duse-external-stdlibs=true -Dos-header-path=../../os/threadx/include
+meson buildresults --cross-file build/cross/gcc/arm/gcc_arm_cortex-m4.txt -Dlibcxx-thread-library=threadx -Dos-header-path=../../os/threadx/include
 ```
 
 ### Blocking new/delete

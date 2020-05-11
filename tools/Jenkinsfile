@@ -25,7 +25,7 @@ pipeline
       steps
       {
         echo 'Running make clean...'
-        sh 'make clean'
+        sh 'make distclean'
 
         gitTagPreBuild "${params.MAJOR_VERSION}.${params.MINOR_VERSION}.${BUILD_NUMBER}"
       }
@@ -41,7 +41,7 @@ pipeline
     {
       steps
       {
-        sh 'meson buildresults/arm/ --cross-file build/cross/gcc/arm/nrf52840.txt -Denable-threading=false -Dlibcxx-enable-chrono=false -Dlibcxx-monotonic-clock=false'
+        sh 'meson buildresults/arm/ --cross-file build/cross/arm.txt --cross-file build/cross/cortex-m3.txt -Denable-threading=false -Dlibcxx-enable-chrono=false -Dlibcxx-monotonic-clock=false'
         sh 'ninja -C buildresults/arm'
       }
     }

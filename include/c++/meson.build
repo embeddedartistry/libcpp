@@ -6,6 +6,7 @@ cat = find_program('cat')
 
 ### Generate and Install Config Header ###
 
+subdir('include')
 subdir('support')
 
 configure_file(

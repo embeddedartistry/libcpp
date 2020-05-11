@@ -18,9 +18,9 @@
 
 #include "__cxxabi_config.h"
 // Include path adjusted to point to the libcxxabi private header, rather than make a copy
-#include "../../libcxxabi/src/cxa_exception.hpp"
+#include "../../libcxxabi/src/cxa_exception.h"
 // Include path adjusted to point to the libcxxabi private header, rather than make a copy
-#include "../../libcxxabi/src/cxa_handlers.hpp"
+#include "../../libcxxabi/src/cxa_handlers.h"
 // Include path adjusted to point to the libcxxabi private header, rather than make a copy
 #include "../../libcxxabi/src/private_typeinfo.h"
 #include "unwind.h"

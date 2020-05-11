@@ -147,6 +147,11 @@ libcxx_native_compile_flags = native_cpp_compiler.get_supported_arguments(libcxx
 # Reset the variables for new common flags
 libcxxabi_compile_flags = [
 	'-nostdinc++',
+	# Let C++ library know we are building libcxxabi
+	'-D_LIBCXXABI_BUILDING_LIBRARY',
+	# Bring back `std::unexpected`, which is removed in C++17, to support
+	# pre-C++17.
+	'-D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS',
 ]
 
 libcxx_compile_flags = [

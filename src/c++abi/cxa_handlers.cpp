@@ -14,8 +14,8 @@
 #include <exception>
 #include "../../libcxxabi/src/abort_message.h"
 #include "cxxabi.h"
-#include "../../libcxxabi/src/cxa_handlers.hpp"
-#include "../../libcxxabi/src/cxa_exception.hpp"
+#include "../../libcxxabi/src/cxa_handlers.h"
+#include "../../libcxxabi/src/cxa_exception.h"
 #include "../../libcxxabi/src/private_typeinfo.h"
 #include "../../libcxxabi/src/include/atomic_support.h"
 

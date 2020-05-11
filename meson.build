@@ -152,6 +152,8 @@ libcxxabi_compile_flags = [
 	# Bring back `std::unexpected`, which is removed in C++17, to support
 	# pre-C++17.
 	'-D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS',
+	# ABI needs GNU functions to compile/link
+	'-D_GNU_SOURCE',
 ]
 
 libcxx_compile_flags = [
@@ -199,6 +201,7 @@ libcxx_native_dep_link_flags = common_link_flags
 
 libcxx_dep_compile_flags = [
 	'-nostdinc++',
+	'-D_GNU_SOURCE',
 ]
 
 ##########################
@@ -454,7 +457,7 @@ if enable_threads == true
 				libcxx_native_dependencies += libthread_native
 			endif
 		else
-			assert(false, 'pthread library not found')
+			error('pthread library not found')
 		endif
 	elif thread_library == 'ea-framework'
 		# If we aren't using pthreads, use an external header
@@ -531,7 +534,7 @@ if enable_monotonic_clock == false and enable_threads == false
 endif
 
 if meson.is_cross_build()
-	libcxxabi_cross_args += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
+	libcxxabi_host_compile_flags += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
 	libcxx_host_compile_flags += ['-ffreestanding']
 endif
 

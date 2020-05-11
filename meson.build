@@ -460,6 +460,7 @@ if enable_threads == true
 		'Supply thread library if enable_threads is used')
 
 	if thread_library == 'pthread'
+		message('Using pthread dependency for threading support')
 		if libthread.found()
 			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_PTHREAD', true)
 			libcxxabi_host_dependencies += libthread

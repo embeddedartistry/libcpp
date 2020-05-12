@@ -19,9 +19,9 @@ project('Embedded Artistry libcpp',
 
 disable_rtti = get_option('disable-rtti')
 disable_exceptions = get_option('disable-exceptions')
-use_compiler_rt = get_option('use-compiler-rt')
+use_compiler_rt = get_option('libcxx-use-compiler-rt')
 enable_pedantic_error = get_option('enable-pedantic-error')
-use_llvm_libunwind = get_option('use-llvm-libunwind')
+use_llvm_libunwind = get_option('libcxx-use-llvm-libunwind')
 enable_threads = get_option('enable-threading')
 has_external_threading = get_option('libcxx-has-external-thread-api')
 build_external_threading = get_option('libcxx-build-external-thread-api')

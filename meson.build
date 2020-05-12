@@ -800,7 +800,7 @@ libcxx_header_include_dep = declare_dependency(
 	compile_args: libcxx_dep_compile_flags
 )
 
-libcxx_native_header_include_dep = declare_dependency(
+libcxx_header_include_native_dep = declare_dependency(
 	include_directories: libcxx_include_directories,
 	dependencies: [
 		install_cpp_headers_dep,

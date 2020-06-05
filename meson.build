@@ -193,7 +193,9 @@ libcxx_link_flags = [
 	common_link_flags,
 ]
 
+libcxx_host_dep_compiler_flags = []
 libcxx_host_dep_link_flags = common_link_flags
+libcxx_native_dep_compiler_flags = []
 libcxx_native_dep_link_flags = common_link_flags
 
 libcxx_dep_compile_flags = [
@@ -492,16 +494,16 @@ if enable_threads == true
 
 		if libthread.found()
 			message('Enabling pthread support for the native C++ library')
-			libcxxabi_native_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 			libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			native_stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 		endif
 
 		if libthread_native.found()
 			# Then we will also force pthreads
-			libcxxabi_cross_args += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxxabi_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 			libcxx_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			stdlib_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_host_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 		endif
 	else
 		# If we aren't using pthreads or framework, use an external header
@@ -753,7 +755,7 @@ libcxx_full_dep = declare_dependency(
 		libcxxabi_dep,
 		libc_dep
 	],
-	compile_args: libcxx_dep_compile_flags,
+	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags,
 	link_args: libcxx_host_dep_link_flags
 )
 
@@ -765,7 +767,7 @@ libcxx_full_native_dep = declare_dependency(
 		libcxxabi_native_dep,
 		libc_native_dep
 	],
-	compile_args: libcxx_dep_compile_flags,
+	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags,
 	link_args: libcxx_native_dep_link_flags
 )
 
@@ -797,7 +799,7 @@ libcxx_header_include_dep = declare_dependency(
 		install_cpp_headers_dep,
 		libc_dep,
 	],
-	compile_args: libcxx_dep_compile_flags
+	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags
 )
 
 libcxx_native_header_include_dep = declare_dependency(
@@ -806,5 +808,5 @@ libcxx_native_header_include_dep = declare_dependency(
 		install_cpp_headers_dep,
 		libc_native_dep,
 	],
-	compile_args: libcxx_dep_compile_flags
+	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags
 )

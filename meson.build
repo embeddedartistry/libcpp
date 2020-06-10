@@ -45,6 +45,7 @@ silent_terminate = get_option('libcxx-silent-terminate')
 
 if build_machine.system() == 'darwin'
 	darwin_sdk_path = run_command('xcrun', '--show-sdk-path').stdout().strip()
+	darwin_sdk_include_arg = '-idirafter' + darwin_sdk_path + '/usr/include/'
 	message('Using Darwin SDK path: ' + darwin_sdk_path)
 endif
 
@@ -284,9 +285,6 @@ libcxx_include_directories = [
 	include_directories('include/c++', is_system: true),
 	libcxx_extensions_include_dir
 ]
-
-thread_host_include_directories = []
-thread_native_include_directories = []
 
 # Variables to hold target dependencies that are triggered by build options
 libcxxabi_host_dependencies = []
@@ -560,9 +558,9 @@ if using_pthread == true
 
 	if libthread.found()
 		if host_machine.system() == 'darwin'
-				thread_host_include_directories = include_directories(
-					darwin_sdk_path + '/usr/include',
-					is_system: true)
+			libcxxabi_host_compile_flags += darwin_sdk_include_arg
+			libcxx_host_compile_flags += darwin_sdk_include_arg
+			libcxx_host_dep_compiler_flags += darwin_sdk_include_arg
 		endif
 
 		if thread_library == 'pthread'
@@ -583,9 +581,9 @@ if using_pthread == true
 	endif
 
 	if build_machine.system() == 'darwin'
-		thread_native_include_directories = include_directories(
-			darwin_sdk_path + '/usr/include',
-			is_system: true)
+		libcxxabi_native_compile_flags += darwin_sdk_include_arg
+		libcxx_native_compile_flags += darwin_sdk_include_arg
+		libcxx_native_dep_compiler_flags += darwin_sdk_include_arg
 	endif
 
 	libcxxabi_native_dependencies += libthread_native
@@ -667,7 +665,6 @@ libcxxabi = static_library('c++abi',
     	libc_dep,
     	libcxxabi_include_dep,
     ],
-    include_directories: thread_host_include_directories,
     build_by_default: meson.is_subproject() == false,
 )
 
@@ -684,7 +681,6 @@ libcxxabi_native = static_library('c++abi_native',
     	libc_native_dep,
     	libcxxabi_include_dep,
     ],
-    include_directories: thread_native_include_directories,
     native: true,
     build_by_default: meson.is_subproject() == false,
 )
@@ -696,7 +692,6 @@ libcxxabi_native = static_library('c++abi_native',
 libcxxabi_dep = declare_dependency(
 	include_directories: [
 		include_directories('include/c++abi', is_system: true),
-		thread_host_include_directories,
 	],
 	link_with: libcxxabi,
 	link_args: libcxx_host_dep_link_flags
@@ -705,7 +700,6 @@ libcxxabi_dep = declare_dependency(
 libcxxabi_native_dep = declare_dependency(
 	include_directories: [
 		include_directories('include/c++abi', is_system: true),
-		thread_native_include_directories,
 	],
 	link_with: libcxxabi_native,
 	link_args: libcxx_native_dep_link_flags
@@ -732,7 +726,6 @@ libcpp = static_library('c++',
 	    libc_dep,
 	    libcxx_include_dep
     ],
-    include_directories: thread_host_include_directories,
     build_by_default: meson.is_subproject() == false,
 )
 
@@ -746,7 +739,6 @@ libcpp_native = static_library('c++_native',
     	libc_native_dep,
     	libcxx_include_dep
     ],
-    include_directories: thread_native_include_directories,
     native: true,
     build_by_default: meson.is_subproject() == false,
 )
@@ -822,7 +814,6 @@ libcxx_full_dep = declare_dependency(
 		libcxxabi_dep,
 		libc_dep
 	],
-	include_directories: thread_host_include_directories,
 	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags,
 	link_args: libcxx_host_dep_link_flags
 )
@@ -835,7 +826,6 @@ libcxx_full_native_dep = declare_dependency(
 		libcxxabi_native_dep,
 		libc_native_dep
 	],
-	include_directories: thread_native_include_directories,
 	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags,
 	link_args: libcxx_native_dep_link_flags
 )

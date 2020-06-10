@@ -20,7 +20,7 @@ option('libcxx-enable-stdinout', type: 'boolean', value: true, yield: true)
 option('libcxx-default-newdelete', type: 'boolean', value: true, yield: true)
 option('libcxx-silent-terminate', type: 'boolean', value: true, yield: true)
 option('libcxx-monotonic-clock', type: 'boolean', value: true, yield: true)
-option('use-libc-subproject', type: 'boolean', value: false, yield: true,
+option('use-libc-subproject', type: 'boolean', value: true, yield: true,
     description: 'When true, use the subproject defined in the libc-subproject option. An alternate approach is to override c_stdlib in your cross files.')
 option('libc-subproject', type: 'array', 
     value: ['libc', 'libc_dep', 'libc_hosted_native_dep'],

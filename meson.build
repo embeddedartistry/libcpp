@@ -39,15 +39,21 @@ use_external_libc = get_option('use-libc-subproject')
 # causes extra I/O and demangling code to be pulled in.
 silent_terminate = get_option('libcxx-silent-terminate')
 
+#####################################
+# If Darwin, determine the SDK path #
+#####################################
+
+if build_machine.system() == 'darwin'
+	darwin_sdk_path = run_command('xcrun', '--show-sdk-path').stdout().strip()
+	message('Using Darwin SDK path: ' + darwin_sdk_path)
+endif
+
 ##################
 # Compiler Flags #
 ##################
 
 host_os = host_machine.system()
 build_os = build_machine.system()
-
-libthread = dependency('threads', required: false)
-libthread_native = dependency('threads', native: true, required: false)
 
 # Pick up our common compiler variables + desired_*_flags variables
 subdir('build/compiler')
@@ -279,11 +285,16 @@ libcxx_include_directories = [
 	libcxx_extensions_include_dir
 ]
 
+thread_host_include_directories = []
+thread_native_include_directories = []
+
 # Variables to hold target dependencies that are triggered by build options
 libcxxabi_host_dependencies = []
 libcxxabi_native_dependencies = []
 libcxx_host_dependencies = []
 libcxx_native_dependencies = []
+
+using_pthread = false
 
 #################################
 # Initialize Configuration Data #
@@ -345,11 +356,9 @@ if use_external_libc
 		endif
 	endif
 
+	# Libcxxabi Settings
 	libcxxabi_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE', '-DLIBCXXABI_USE_LLVM_UNWINDER']
-	libcxx_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE']
-
 	libcxxabi_include_directories += include_directories('embedded-unwind/include', is_system: true)
-
 	libcxxabi_files += files(
 		'src/c++abi/abort_message.cpp',
 		'src/c++abi/cxa_guard.cpp',
@@ -360,6 +369,13 @@ if use_external_libc
 		libcxxabi_files += files('src/c++abi/cxa_demangle.cpp')
 	endif
 
+	# TODO: build Unwind-sjlj_pthread.c
+	if host_machine.cpu_family() == 'arm'
+		libcxxabi_host_compile_flags += ['-D__USING_SJLJ_EXCEPTIONS__']
+	endif
+
+	## Libcxx Settings
+	libcxx_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE']
 	libcpp_core_files += files(
 		'src/c++/debug.cpp',
 		'src/c++/locale.cpp',
@@ -367,17 +383,13 @@ if use_external_libc
 		'src/c++/random.cpp',
 		'src/c++/stdexcept.cpp',
 	)
-
-	# TODO: build Unwind-sjlj_pthread.c
-	if host_machine.cpu_family() == 'arm'
-		libcxxabi_host_compile_flags += ['-D__USING_SJLJ_EXCEPTIONS__']
-	endif
-
 	# Enable "baremetal" fallbacks when working with an alternate libc
 	# TODO: better name for this argument - could be split out even?
 	libcxx_conf_data.set('_BAREMETAL', true)
 else
 	message('Compiling with the built-in libc and system headers')
+
+	libcxxabi_compile_flags += '-nostdinc++'
 	libcxxabi_files += files(
 		'libcxxabi/src/abort_message.cpp',
 		'libcxxabi/src/stdlib_stdexcept.cpp',
@@ -390,6 +402,7 @@ else
 		)
 	endif
 
+	libcxx_compile_flags += '-nostdinc++'
 	libcpp_core_files += files(
 		'libcxx/src/debug.cpp',
 		'libcxx/src/iostream.cpp',
@@ -398,40 +411,54 @@ else
 		'libcxx/src/string.cpp',
 		'libcxx/src/stdexcept.cpp',
 	)
-
-	libcxx_compile_flags += '-nostdinc++'
-	libcxxabi_compile_flags += '-nostdinc++'
 endif
 
 ################################
 # Apply Project Option Changes #
 ################################
 
+### Exceptions
 if disable_exceptions == true
 	message('Exceptions are disabled')
+
+	libcxxabi_files += files(
+		'libcxxabi/src/cxa_noexception.cpp',
+	)
 	libcxxabi_compile_flags += ['-D_LIBCXXABI_NO_EXCEPTIONS', '-fno-exceptions']
+
 	libcxx_compile_flags += ['-fno-exceptions']
 	libcxx_conf_data.set('_LIBCPP_NO_EXCEPTIONS', true)
 else
 	message('Exceptions are enabled')
+
 	libcxxabi_compile_flags += ['-funwind-tables']
+	libcxxabi_files += files(
+		'libcxxabi/src/cxa_exception.cpp',
+		# We always use our CXA Personality because the standard one doesn't support GCC
+		'src/c++abi/cxa_personality.cpp',
+	)
+
 	libcxxabi_files += files('libcxxabi/src/cxa_exception_storage.cpp',)
 endif
 
+### RTTI
 if disable_rtti == true
 	message('RTTI is Disabled')
 	libcxx_compile_flags += ['-fno-rtti']
 	libcxx_conf_data.set('_LIBCPP_NO_RTTI', true)
 endif
 
+### STDIO
 if enable_stdinout == false
 	libcxx_conf_data.set('_LIBCPP_HAS_NO_STDIN', true)
 endif
 
+### Filesystem
 if enable_filesystem == false
 	libcxx_conf_data.set('_LIBCPP_HAS_NO_GLOBAL_FILESYSTEM_NAMESPACE', true)
 endif
 
+### Compiler-rt
 if use_compiler_rt == true
 	libcxxabi_link_flags += '-rtlib=compiler-rt'
 	libcxx_link_flags += '-rtlib=compiler-rt'
@@ -443,10 +470,12 @@ else
 	libcpp_filesystem_files += files('libcxx/src/filesystem/int128_builtins.cpp')
 endif
 
+### Unwind
 if use_llvm_libunwind == true
 	libcxxabi_compile_flags += '-DLIBCXXABI_USE_LLVM_UNWINDER'
 endif
 
+### Terminate
 # The default terminate handler attempts to demangle uncaught exceptions, which
 # causes extra I/O and demangling code to be pulled in.
 if silent_terminate == true
@@ -455,44 +484,21 @@ else
 	assert(disable_rtti == false, 'Loud terminate requires RTTI')
 endif
 
+### New/Delete
 if default_newdelete == true
 	libcxxabi_files += files('libcxxabi/src/stdlib_new_delete.cpp')
 else
 	libcxx_compile_flags += '-D_LIBCPP_DISABLE_NEW_DELETE_DEFINITIONS'
 endif
 
-if disable_exceptions == true
-	libcxxabi_files += files(
-		'libcxxabi/src/cxa_noexception.cpp',
-	)
-else
-	libcxxabi_files += files(
-		'libcxxabi/src/cxa_exception.cpp',
-		# We always use our CXA Personality because the standard one doesn't support GCC
-		'src/c++abi/cxa_personality.cpp',
-	)
-endif
-
+### Threading Support
 if enable_threads == true
 	assert(not ((thread_library == '') or (thread_library == 'none')),
 		'Supply thread library if enable_threads is used')
 
 	if thread_library == 'pthread'
 		message('Using pthread dependency for threading support')
-		if libthread.found()
-			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_PTHREAD', true)
-			libcxxabi_host_dependencies += libthread
-			libcxx_host_dependencies += libthread
-
-			libcpp_core_files += files('src/c++/thread.cpp')
-
-			if libthread_native.found()
-				libcxxabi_native_dependencies += libthread_native
-				libcxx_native_dependencies += libthread_native
-			endif
-		else
-			error('pthread library not found')
-		endif
+		using_pthread = true
 	elif thread_library == 'ea-framework'
 		# If we aren't using pthreads, use an external header
 		message('Building with framework thread library support')
@@ -504,19 +510,7 @@ if enable_threads == true
 
 		libcpp_core_files += files('src/c++/thread.cpp')
 
-		if libthread.found()
-			message('Enabling pthread support for the native C++ library')
-			libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		endif
-
-		if libthread_native.found()
-			# Then we will also force pthreads
-			libcxxabi_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_host_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		endif
+		using_pthread = true
 	else
 		# If we aren't using pthreads or framework, use an external header
 		assert(not (has_external_threading == true and build_external_threading == true),
@@ -559,21 +553,65 @@ else
 	libcxxabi_compile_flags += '-D_LIBCXXABI_HAS_NO_THREADS'
 endif
 
+# Handle pthread-specific logic
+if using_pthread == true
+	libthread = dependency('threads', required: false)
+	libthread_native = dependency('threads', native: true, required: true)
+
+	if libthread.found()
+		if host_machine.system() == 'darwin'
+				thread_host_include_directories = include_directories(
+					darwin_sdk_path + '/usr/include',
+					is_system: true)
+		endif
+
+		if thread_library == 'pthread'
+			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_PTHREAD', true)
+			libcxxabi_host_dependencies += libthread
+			libcxx_host_dependencies += libthread
+			libcpp_core_files += files('src/c++/thread.cpp')
+		elif thread_library == 'ea-framework'
+			message('Enabling pthread support for the host machine C++ library')
+			libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		else
+			error('Unexpected thread configuration')
+		endif
+	elif thread_library == 'pthread'
+		error('pthread selected as threading library, but it is not available for the host machine.')
+	endif
+
+	if build_machine.system() == 'darwin'
+		thread_native_include_directories = include_directories(
+			darwin_sdk_path + '/usr/include',
+			is_system: true)
+	endif
+
+	libcxxabi_native_dependencies += libthread_native
+	libcxx_native_dependencies += libthread_native
+
+	if thread_library == 'ea-framework'
+		message('Enabling pthread support for the native C++ library')
+		libcxxabi_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxx_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxx_host_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+	endif
+endif
+
+#### Monotonic Clock
 # monotonic clock can only be disabled if there is no threading
 if enable_monotonic_clock == false and enable_threads == false
 	libcxx_conf_data.set('_LIBCPP_HAS_NO_MONOTONIC_CLOCK', true)
 endif
 
-if meson.is_cross_build()
-	libcxxabi_host_compile_flags += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
-	libcxx_host_compile_flags += ['-ffreestanding']
-endif
-
+### 32-bit
 if force_32_bit == true
 	libcxx_compile_flags += '-m32'
 	libcxxabi_compile_flags += '-m32'
 endif
 
+### Atexit Handling
 if host_cpp_compiler.has_function('__cxa_thread_atexit_impl')
 	libcxx_host_compile_flags += ['-DHAVE___CXA_THREAD_ATEXIT_IMPL']
 elif host_machine.system() == 'darwin'
@@ -588,6 +626,13 @@ elif build_machine.system() == 'darwin'
 	# On OS X, clang doesn't handle weak linking the way we expect
 	# So we'll work around it by undefining the weak symbol
 	libcxx_native_dep_link_flags += '-Wl,-U,___cxa_thread_atexit_impl'
+endif
+
+### Cross-compilation Specific
+
+if meson.is_cross_build()
+	libcxxabi_host_compile_flags += ['-DLIBCXXABI_BAREMETAL', '-ffreestanding']
+	libcxx_host_compile_flags += ['-ffreestanding']
 endif
 
 ###################
@@ -622,6 +667,7 @@ libcxxabi = static_library('c++abi',
     	libc_dep,
     	libcxxabi_include_dep,
     ],
+    include_directories: thread_host_include_directories,
     build_by_default: meson.is_subproject() == false,
 )
 
@@ -638,6 +684,7 @@ libcxxabi_native = static_library('c++abi_native',
     	libc_native_dep,
     	libcxxabi_include_dep,
     ],
+    include_directories: thread_native_include_directories,
     native: true,
     build_by_default: meson.is_subproject() == false,
 )
@@ -647,13 +694,19 @@ libcxxabi_native = static_library('c++abi_native',
 ##########################
 
 libcxxabi_dep = declare_dependency(
-	include_directories: include_directories('include/c++abi', is_system: true),
+	include_directories: [
+		include_directories('include/c++abi', is_system: true),
+		thread_host_include_directories,
+	],
 	link_with: libcxxabi,
 	link_args: libcxx_host_dep_link_flags
 )
 
 libcxxabi_native_dep = declare_dependency(
-	include_directories: include_directories('include/c++abi', is_system: true),
+	include_directories: [
+		include_directories('include/c++abi', is_system: true),
+		thread_native_include_directories,
+	],
 	link_with: libcxxabi_native,
 	link_args: libcxx_native_dep_link_flags
 )
@@ -679,6 +732,7 @@ libcpp = static_library('c++',
 	    libc_dep,
 	    libcxx_include_dep
     ],
+    include_directories: thread_host_include_directories,
     build_by_default: meson.is_subproject() == false,
 )
 
@@ -692,6 +746,7 @@ libcpp_native = static_library('c++_native',
     	libc_native_dep,
     	libcxx_include_dep
     ],
+    include_directories: thread_native_include_directories,
     native: true,
     build_by_default: meson.is_subproject() == false,
 )
@@ -767,6 +822,7 @@ libcxx_full_dep = declare_dependency(
 		libcxxabi_dep,
 		libc_dep
 	],
+	include_directories: thread_host_include_directories,
 	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags,
 	link_args: libcxx_host_dep_link_flags
 )
@@ -779,6 +835,7 @@ libcxx_full_native_dep = declare_dependency(
 		libcxxabi_native_dep,
 		libc_native_dep
 	],
+	include_directories: thread_native_include_directories,
 	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags,
 	link_args: libcxx_native_dep_link_flags
 )

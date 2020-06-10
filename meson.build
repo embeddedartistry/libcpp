@@ -317,6 +317,17 @@ if use_external_libc
 	libc_dep = libc_subproject.get_variable(libc_array[1])
 	# Only pull in include directories + compile arguments
 	libc_dep = libc_dep.partial_dependency(includes: true, compile_args: true)
+	if(host_machine.system() == 'darwin')
+			# -nostdinc will mess with availabilty.h and a few other headers, so we
+			# reference local includes
+			message('Using local headers for Apple dependencies.')
+			libc_dep = [
+				libc_dep,
+				declare_dependency(
+					include_directories: include_directories('include/apple', is_system: true),
+				)
+			]
+		endif
 
 	if libc_array.length() > 2
 		libc_native_dep = libc_subproject.get_variable(libc_array[2])
@@ -324,6 +335,7 @@ if use_external_libc
 		if(build_machine.system() == 'darwin')
 			# -nostdinc will mess with availabilty.h and a few other headers, so we
 			# reference local includes
+			message('Using local headers for Apple dependencies.')
 			libc_native_dep = [
 				libc_native_dep,
 				declare_dependency(

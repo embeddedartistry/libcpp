@@ -37,8 +37,10 @@ struct mach_timebase_info {
   uint32_t        denom;
 };
 
+extern "C" {
 extern uint64_t mach_absolute_time(void);
 extern int mach_timebase_info(struct mach_timebase_info* info);
+}
 #elif !defined(_LIBCPP_WIN32API) && !defined(CLOCK_MONOTONIC)
 #error "Monotonic clock not implemented"
 #endif

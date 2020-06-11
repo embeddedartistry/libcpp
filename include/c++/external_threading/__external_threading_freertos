@@ -44,6 +44,8 @@ struct __libcpp_mutex_t
   volatile mutex_fptr_t init;
 };
 
+typedef ::timespec __libcpp_timespec_t;
+
 #define _LIBCPP_MUTEX_INITIALIZER {0, &__libcpp_mutex_init}
 
 typedef SemaphoreHandle_t __libcpp_recursive_mutex_t;

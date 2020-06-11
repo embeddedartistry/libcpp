@@ -55,6 +55,8 @@ typedef void* __libcpp_thread_t;
 // Thread Local Storage
 typedef long __libcpp_tls_key;
 
+typedef ::timespec __libcpp_timespec_t;
+
 // TODO: investigate, this was __stdcall
 #define _LIBCPP_TLS_DESTRUCTOR_CC
 

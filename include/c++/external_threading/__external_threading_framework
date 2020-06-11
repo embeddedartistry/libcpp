@@ -54,6 +54,8 @@ typedef embvm::thread::handle_t __libcpp_thread_id;
 
 typedef embvm::VirtualThread* __libcpp_thread_t;
 
+typedef ::timespec __libcpp_timespec_t;
+
 // Thread Local Storage
 #if defined(_LIBCPP_FRAMEWORK_FORCE_PTHREAD)
 typedef pthread_key_t __libcpp_tls_key;

@@ -582,20 +582,22 @@ if using_pthread == true
 		error('pthread selected as threading library, but it is not available for the host machine.')
 	endif
 
-	if build_machine.system() == 'darwin'
-		libcxxabi_native_compile_flags += darwin_sdk_include_arg
-		libcxx_native_compile_flags += darwin_sdk_include_arg
-		libcxx_native_dep_compiler_flags += darwin_sdk_include_arg
-	endif
+	if libthread_native.found()
+		if build_machine.system() == 'darwin'
+			libcxxabi_native_compile_flags += darwin_sdk_include_arg
+			libcxx_native_compile_flags += darwin_sdk_include_arg
+			libcxx_native_dep_compiler_flags += darwin_sdk_include_arg
+		endif
 
-	libcxxabi_native_dependencies += libthread_native
-	libcxx_native_dependencies += libthread_native
+		libcxxabi_native_dependencies += libthread_native
+		libcxx_native_dependencies += libthread_native
 
-	if thread_library == 'ea-framework'
-		message('Enabling pthread support for the native C++ library')
-		libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		if thread_library == 'ea-framework'
+			message('Enabling pthread support for the native C++ library')
+			libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		endif
 	endif
 endif
 

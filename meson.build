@@ -572,9 +572,9 @@ if using_pthread == true
 			libcpp_core_files += files('src/c++/thread.cpp')
 		elif thread_library == 'ea-framework'
 			message('Enabling pthread support for the host machine C++ library')
-			libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-			libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxxabi_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+			libcxx_host_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 		else
 			error('Unexpected thread configuration')
 		endif
@@ -593,9 +593,9 @@ if using_pthread == true
 
 	if thread_library == 'ea-framework'
 		message('Enabling pthread support for the native C++ library')
-		libcxxabi_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		libcxx_host_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
-		libcxx_host_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxxabi_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxx_native_compile_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
+		libcxx_native_dep_compiler_flags += '-D_LIBCPP_FRAMEWORK_FORCE_PTHREAD'
 	endif
 endif
 

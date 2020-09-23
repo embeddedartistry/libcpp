@@ -555,8 +555,16 @@ endif
 
 # Handle pthread-specific logic
 if using_pthread == true
-	libthread = dependency('threads', required: false)
+	libthread = dependency('threads', native: false, required: false)
 	libthread_native = dependency('threads', native: true, required: true)
+
+	# First, we'll a sanity check to make sure -pthread is actually supported!
+	if libthread.found()
+		if(host_cpp_compiler.has_argument('-pthread') == false)
+			message('Meson says the compiler supports pthread, but it does not. Disabling pthread dependency')
+			libthread = disabler()
+		endif
+	endif
 
 	if libthread.found()
 		if host_machine.system() == 'darwin'

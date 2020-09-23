@@ -30,7 +30,7 @@
 #endif // defined(_LIBCPP_WIN32API)
 
 #if !defined(_LIBCPP_HAS_NO_MONOTONIC_CLOCK)
-#if __APPLE__
+#if defined(__APPLE__)
 // Break the dependnecy on mach_time.h and just declare things here.
 struct mach_timebase_info {
   uint32_t        numer;

@@ -46,7 +46,7 @@ void set_initialized(guard_type* guard_object) {
 }
 #endif
 
-#if defined(_LIBCXXABI_HAS_NO_THREADS) || (defined(__APPLE__) && !defined(__arm__))
+#if defined(_LIBCXXABI_HAS_NO_THREADS)
 #ifdef __arm__
 
 // Test the lowest bit.

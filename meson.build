@@ -209,6 +209,21 @@ libcxx_dep_compile_flags = [
 	'-D_GNU_SOURCE',
 ]
 
+######################
+# Handle Linux Build #
+######################
+# Linux requires special headers... and doesn't work with -nostdinc++
+
+if build_machine.system() == 'linux'
+	libcxx_native_compile_flags += ['-idirafter/usr/include']
+	libcxxabi_native_compile_flags += ['-idirafter/usr/include']
+endif
+
+if host_machine.system() == 'linux'
+	libcxx_host_compile_flags += ['-idirafter/usr/include']
+	libcxxabi_host_compile_flags += ['-idirafter/usr/include']
+endif
+
 ##########################
 # Set Default File Lists #
 ##########################

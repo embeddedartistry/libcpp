@@ -210,7 +210,15 @@
 # define _LIBCPP_ABI_VCRUNTIME
 #endif
 
-#define _LIBCPP_GLIBC_PREREQ(a, b) 0
+// Need to detect which libc we're using if we're on Linux.
+#if defined(__linux__)
+#  include <features.h>
+#  if defined(__GLIBC_PREREQ)
+#    define _LIBCPP_GLIBC_PREREQ(a, b) __GLIBC_PREREQ(a, b)
+#  else
+#    define _LIBCPP_GLIBC_PREREQ(a, b) 0
+#  endif // defined(__GLIBC_PREREQ)
+#endif // defined(__linux__)
 
 #ifdef __LITTLE_ENDIAN__
 #  if __LITTLE_ENDIAN__

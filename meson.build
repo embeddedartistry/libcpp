@@ -32,7 +32,6 @@ enable_monotonic_clock = get_option('libcxx-monotonic-clock')
 force_32_bit = get_option('force-32-bit')
 enable_chrono = get_option('libcxx-enable-chrono')
 thread_library = get_option('libcxx-thread-library')
-os_header_path = get_option('os-header-path')
 use_external_libc = get_option('use-libc-subproject')
 
 # The default terminate handler attempts to demangle uncaught exceptions, which
@@ -502,14 +501,9 @@ if enable_threads == true
 	elif thread_library == 'ea-framework'
 		# If we aren't using pthreads, use an external header
 		message('Building with framework thread library support')
-		message('Using include path to core RTOS headers: ' + os_header_path)
+
 		libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
-
-		libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
-		libcxx_include_directories += include_directories(os_header_path, is_system: true)
-
 		libcpp_core_files += files('src/c++/thread.cpp')
-
 		using_pthread = true
 	else
 		# If we aren't using pthreads or framework, use an external header
@@ -522,13 +516,6 @@ if enable_threads == true
 		else
 			libcxx_conf_data.set('_LIBCPP_HAS_THREAD_API_EXTERNAL', true)
 			libcpp_core_files += files('src/c++/thread.cpp')
-		endif
-
-		if os_header_path == ''
-			message('If the build fails, please set os-header-path so the build can find your includes')
-		else
-			libcxxabi_include_directories += include_directories(os_header_path, is_system: true)
-			libcxx_include_directories += include_directories(os_header_path, is_system: true)
 		endif
 
 		# TODO: test - does the new logic break in this case, and should we reactivate this?

@@ -1,4 +1,3 @@
-option('os-header-path', type: 'string', value: '../embvm-core/src/core', yield: true)
 option('force-32-bit', type: 'boolean', value: false, yield: true,
     description: 'Force 32-bit compilation for libcpp')
 option('disable-rtti', type : 'boolean', value: false, yield: true)

@@ -9,15 +9,21 @@ cat = find_program('cat')
 subdir('include')
 subdir('support')
 
-configure_file(
+config_site_header = configure_file(
 	input: '__libcxx_config_site.in',
 	output: '__libcpp_config_site',
 	configuration: libcxx_conf_data,
 )
 
+config_header = configure_file(
+	input: '__config',
+	output: '__config',
+	copy: true
+)
+
 libcpp_config_headers = files(
   meson.current_build_dir() + '/__libcpp_config_site',
-  '../../libcxx/include/__config'
+  meson.current_build_dir() + '/__config',
 )
 
 generate_libpp_config_header = custom_target(
@@ -27,7 +33,6 @@ generate_libpp_config_header = custom_target(
   input: libcpp_config_headers,
   output: '__config',
 )
-
 
 ### Handle Threading Headers ###
 

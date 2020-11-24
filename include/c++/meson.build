@@ -16,7 +16,7 @@ config_site_header = configure_file(
 )
 
 config_header = configure_file(
-	input: '__config',
+	input: '__config.in',
 	output: '__config',
 	copy: true
 )

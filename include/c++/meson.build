@@ -17,15 +17,13 @@ config_site_header = configure_file(
 
 config_header = configure_file(
 	input: '__config.in',
-	output: '__config',
+	output: '__config_base',
 	copy: true
 )
 
-libcpp_config_headers = files(
-  meson.current_build_dir() + '/__libcpp_config_site',
-  meson.current_build_dir() + '/__config',
-)
+libcpp_config_headers = [config_site_header, config_header]
 
+# This step composes the two headers above
 generate_libpp_config_header = custom_target(
   'generate_libpp_config_header',
   command: [ cat, '@INPUT@' ],

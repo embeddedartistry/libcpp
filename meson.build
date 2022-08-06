@@ -708,7 +708,8 @@ libcxxabi_dep = declare_dependency(
 		include_directories('include/c++abi', is_system: true),
 	],
 	link_with: libcxxabi,
-	link_args: libcxx_host_dep_link_flags
+	link_args: libcxx_host_dep_link_flags,
+	dependencies: libcxxabi_host_dependencies
 )
 
 libcxxabi_native_dep = declare_dependency(
@@ -716,7 +717,8 @@ libcxxabi_native_dep = declare_dependency(
 		include_directories('include/c++abi', is_system: true),
 	],
 	link_with: libcxxabi_native,
-	link_args: libcxx_native_dep_link_flags
+	link_args: libcxx_native_dep_link_flags,
+	dependencies: libcxxabi_native_dependencies
 )
 
 ##########################
@@ -826,7 +828,8 @@ libcxx_full_dep = declare_dependency(
 	dependencies: [
 		install_cpp_headers_dep,
 		libcxxabi_dep,
-		libc_dep
+		libc_dep,
+		libcxx_host_dependencies
 	],
 	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags,
 	link_args: libcxx_host_dep_link_flags
@@ -838,7 +841,8 @@ libcxx_full_native_dep = declare_dependency(
 	dependencies: [
 		install_cpp_headers_dep,
 		libcxxabi_native_dep,
-		libc_native_dep
+		libc_native_dep,
+		libcxx_native_dependencies
 	],
 	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags,
 	link_args: libcxx_native_dep_link_flags
@@ -871,6 +875,7 @@ libcxx_header_include_dep = declare_dependency(
 	dependencies: [
 		install_cpp_headers_dep,
 		libc_dep,
+		libcxx_host_dependencies,
 	],
 	compile_args: libcxx_dep_compile_flags + libcxx_host_dep_compiler_flags
 )
@@ -880,6 +885,7 @@ libcxx_native_header_include_dep = declare_dependency(
 	dependencies: [
 		install_cpp_headers_dep,
 		libc_native_dep,
+		libcxx_native_dependencies,
 	],
 	compile_args: libcxx_dep_compile_flags + libcxx_native_dep_compiler_flags
 )

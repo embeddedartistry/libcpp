@@ -216,11 +216,13 @@ libcxx_dep_compile_flags = [
 
 if build_machine.system() == 'linux'
 	libcxx_native_compile_flags += ['-idirafter/usr/include']
+	libcxx_native_dep_compiler_flags += ['-idirafter/usr/include']
 	libcxxabi_native_compile_flags += ['-idirafter/usr/include']
 endif
 
 if host_machine.system() == 'linux'
 	libcxx_host_compile_flags += ['-idirafter/usr/include']
+	libcxx_host_dep_compiler_flags += ['-idirafter/usr/include']
 	libcxxabi_host_compile_flags += ['-idirafter/usr/include']
 endif
 

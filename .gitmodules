@@ -6,7 +6,7 @@
 	url = git@github.com:llvm-mirror/libcxx.git
 [submodule "build"]
 	path = build
-	url = git@github.com:embeddedartistry/meson-buildsystem.git
+	url = https://github.com/embeddedartistry/meson-buildsystem
 [submodule "embedded-unwind"]
 	path = embedded-unwind
 	url = git@github.com:embeddedartistry/embedded-unwind.git

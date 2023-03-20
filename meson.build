@@ -56,8 +56,8 @@ host_os = host_machine.system()
 build_os = build_machine.system()
 
 # Pick up our common compiler variables + desired_*_flags variables
-subdir('build/compiler')
-subdir('build/compiler/cpp')
+subdir('meson/compiler')
+subdir('meson/compiler/cpp')
 
 if meson.is_cross_build()
 	host_cpp_compiler = meson.get_compiler('cpp', native: false)
@@ -141,7 +141,7 @@ compile_settings_list = [
 ]
 
 # Process the compilation flags
-subdir('build/compiler/check-and-apply-flags')
+subdir('meson/compiler/check-and-apply-flags')
 libcxxabi_host_compile_flags = host_cpp_compiler.get_supported_arguments(libcxxabi_compile_flags)
 libcxxabi_native_compile_flags = native_cpp_compiler.get_supported_arguments(libcxxabi_compile_flags)
 libcxx_host_compile_flags = host_cpp_compiler.get_supported_arguments(libcxx_compile_flags)

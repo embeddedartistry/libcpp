@@ -5,9 +5,8 @@
 	path = libcxx
 	url = git@github.com:llvm-mirror/libcxx.git
 [submodule "build"]
-	path = build
-	url = https://github.com/embeddedartistry/meson-buildsystem
-[submodule "embedded-unwind"]
+	path = meson
+	url = https://github.com/embeddedartistry/meson-buildsystem[submodule "embedded-unwind"]
 	path = embedded-unwind
 	url = git@github.com:embeddedartistry/embedded-unwind.git
 [submodule "extensions/plf_list"]

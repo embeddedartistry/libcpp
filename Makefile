@@ -58,7 +58,7 @@ reconfig:
 
 # Runs whenever the build has not been configured successfully
 $(CONFIGURED_BUILD_DEP):
-	$(Q) meson $(BUILDRESULTS) $(INTERNAL_OPTIONS) $(OPTIONS)
+	$(Q) meson setup $(BUILDRESULTS) $(INTERNAL_OPTIONS) $(OPTIONS)
 
 .PHONY: clean
 clean:

@@ -43,7 +43,7 @@ silent_terminate = get_option('libcxx-silent-terminate')
 #####################################
 
 if build_machine.system() == 'darwin'
-	darwin_sdk_path = run_command('xcrun', '--show-sdk-path').stdout().strip()
+	darwin_sdk_path = run_command('xcrun', '--show-sdk-path', check: true).stdout().strip()
 	darwin_sdk_include_arg = '-idirafter' + darwin_sdk_path + '/usr/include/'
 	message('Using Darwin SDK path: ' + darwin_sdk_path)
 endif

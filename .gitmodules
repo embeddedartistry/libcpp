@@ -1,9 +1,3 @@
-[submodule "libcxxabi"]
-	path = libcxxabi
-	url = git@github.com:llvm-mirror/libcxxabi.git
-[submodule "libcxx"]
-	path = libcxx
-	url = git@github.com:llvm-mirror/libcxx.git
 [submodule "build"]
 	path = meson
 	url = https://github.com/embeddedartistry/meson-buildsystem

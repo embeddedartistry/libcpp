@@ -12,6 +12,7 @@
 #define _LCONV_C99
 #endif
 
+#include "__libcpp_compat.h"
 #include "string"
 #include "locale"
 #include "codecvt"

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "__libcpp_compat.h"
 #include "string"
 #include "cstdlib"
 #include "cwchar"

@@ -11,6 +11,7 @@
 #define _LIBCPP___LOCALE
 
 #include <__config>
+#include "__libcpp_compat.h"
 #include <string>
 #include <memory>
 #include <utility>

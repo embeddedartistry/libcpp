@@ -2,7 +2,7 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <__threading_support>
+#include <__thread/support.h>
 
 /*
     This implementation must be careful to not call code external to this file

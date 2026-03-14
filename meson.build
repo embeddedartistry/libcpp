@@ -153,9 +153,6 @@ libcxx_native_compile_flags = native_cpp_compiler.get_supported_arguments(libcxx
 libcxxabi_compile_flags = [
 	# Let C++ library know we are building libcxxabi
 	'-D_LIBCXXABI_BUILDING_LIBRARY',
-	# Bring back `std::unexpected`, which is removed in C++17, to support
-	# pre-C++17.
-	'-D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS',
 	# ABI needs GNU functions to compile/link
 	'-D_GNU_SOURCE',
 ]
@@ -167,8 +164,6 @@ libcxx_compile_flags = [
 	'-D_LIBCPP_BUILDING_LIBRARY',
 	'-D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER',
 	'-DLIBCXX_BUILDING_LIBCXXABI',
-	# Define we don't touch libcpp debug settings,
-	'-D_LIBCPP_DEBUG=0',
 	# STL needs GNU functions to compile/link
 	'-D_GNU_SOURCE',
 ]
@@ -235,7 +230,6 @@ libcxxabi_files = [
 		'libcxxabi/src/cxa_aux_runtime.cpp',
 		'libcxxabi/src/cxa_default_handlers.cpp',
 		'src/c++abi/cxa_handlers.cpp',
-		'libcxxabi/src/cxa_unexpected.cpp',
 		'libcxxabi/src/cxa_vector.cpp',
 		'libcxxabi/src/cxa_virtual.cpp',
 		'libcxxabi/src/fallback_malloc.cpp',
@@ -269,7 +263,6 @@ libcpp_core_files = [
 		'libcxx/src/strstream.cpp',
 		'libcxx/src/system_error.cpp',
 		'libcxx/src/typeinfo.cpp',
-		'libcxx/src/utility.cpp',
 		'libcxx/src/valarray.cpp',
 		'libcxx/src/variant.cpp',
 		'libcxx/src/vector.cpp',
@@ -284,7 +277,7 @@ if enable_chrono == true
 	endif
 endif
 
-libcpp_experimental_files = files('libcxx/src/experimental/memory_resource.cpp')
+libcpp_experimental_files = []
 
 libcpp_filesystem_files = [
 	files(
@@ -295,12 +288,16 @@ libcpp_filesystem_files = [
 
 libcxxabi_include_directories = [
 	include_directories('include/c++abi/', is_system: true),
-	include_directories('include/c++/', is_system: true)
+	include_directories('include/c++/', is_system: true),
+	include_directories('libcxxabi/include', is_system: true),
+	include_directories('libcxx/include', is_system: true),
 ]
 libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
 libcxx_include_directories = [
 	include_directories('include/c++abi', is_system: true),
 	include_directories('include/c++', is_system: true),
+	include_directories('libcxxabi/include', is_system: true),
+	include_directories('libcxx/include', is_system: true),
 	libcxx_extensions_include_dir
 ]
 
@@ -393,7 +390,6 @@ if use_external_libc
 	## Libcxx Settings
 	libcxx_compile_flags += ['-D_POSIX_MEMALIGN_VISIBLE']
 	libcpp_core_files += files(
-		'src/c++/debug.cpp',
 		'src/c++/locale.cpp',
 		'src/c++/string.cpp',
 		'src/c++/random.cpp',
@@ -420,7 +416,6 @@ else
 
 	libcxx_compile_flags += '-nostdinc++'
 	libcpp_core_files += files(
-		'libcxx/src/debug.cpp',
 		'libcxx/src/iostream.cpp',
 		'libcxx/src/locale.cpp',
 		'libcxx/src/random.cpp',

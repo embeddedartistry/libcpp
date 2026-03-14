@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "__libcpp_compat.h"
 #include "chrono"
 #include "cerrno"        // errno
 #include "system_error"  // __throw_system_error

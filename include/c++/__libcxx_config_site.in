@@ -6,20 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP_CONFIG_SITE
-#define _LIBCPP_CONFIG_SITE
+#ifndef _LIBCPP___CONFIG_SITE
+#define _LIBCPP___CONFIG_SITE
 
 #mesondefine _LIBCPP_ABI_VERSION
-#mesondefine _LIBCPP_ABI_UNSTABLE
+#mesondefine _LIBCPP_ABI_NAMESPACE
 #mesondefine _LIBCPP_ABI_FORCE_ITANIUM
 #mesondefine _LIBCPP_ABI_FORCE_MICROSOFT
-#mesondefine _LIBCPP_HIDE_FROM_ABI_PER_TU_BY_DEFAULT
-#mesondefine _LIBCPP_HAS_NO_GLOBAL_FILESYSTEM_NAMESPACE
-#mesondefine _LIBCPP_HAS_NO_STDIN
-#mesondefine _LIBCPP_HAS_NO_STDOUT
 #mesondefine _LIBCPP_HAS_NO_THREADS
 #mesondefine _LIBCPP_HAS_NO_MONOTONIC_CLOCK
-#mesondefine _LIBCPP_HAS_NO_THREAD_UNSAFE_C_FUNCTIONS
 #mesondefine _LIBCPP_HAS_MUSL_LIBC
 #mesondefine _LIBCPP_HAS_THREAD_API_PTHREAD
 #mesondefine _LIBCPP_HAS_THREAD_API_EXTERNAL
@@ -27,10 +22,19 @@
 #mesondefine _LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL
 #mesondefine _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 #mesondefine _LIBCPP_NO_VCRUNTIME
-#mesondefine _LIBCPP_ABI_NAMESPACE
+#mesondefine _LIBCPP_HAS_NO_FILESYSTEM
+#mesondefine _LIBCPP_HAS_NO_RANDOM_DEVICE
+#mesondefine _LIBCPP_HAS_NO_LOCALIZATION
+#mesondefine _LIBCPP_HAS_NO_UNICODE
+#mesondefine _LIBCPP_HAS_NO_WIDE_CHARACTERS
+#mesondefine _LIBCPP_HAS_NO_STD_MODULES
+#mesondefine _LIBCPP_HAS_NO_TIME_ZONE_DATABASE
+
+// Embedded Artistry extensions
+#mesondefine _BAREMETAL
 #mesondefine _LIBCPP_NO_RTTI
 #mesondefine _LIBCPP_NO_EXCEPTIONS
-#mesondefine _BAREMETAL
+#mesondefine _LIBCPP_HIDE_FROM_ABI_PER_TU_BY_DEFAULT
 
 // Not supported: @ _LIBCPP_ABI_DEFINES@
 
@@ -40,4 +44,4 @@
 #define _LIBCPP_HAS_THREAD_API_PTHREAD
 #endif
 
-#endif // _LIBCPP_CONFIG_SITE
+#endif // _LIBCPP___CONFIG_SITE

@@ -9,7 +9,7 @@
 #include "__cxxabi_config.h"
 
 #include "abort_message.h"
-#include <__threading_support>
+#include <__thread/support.h>
 
 #include <stdint.h>
 

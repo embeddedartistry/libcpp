@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "__config"
+#include "__libcpp_compat.h"
 
 #include "system_error"
 
@@ -17,7 +18,7 @@
 #include "cstdlib"
 #include "string"
 #include "string.h"
-#include "__debug"
+#include "__assert"
 
 #if defined(__ANDROID__)
 #include <android/api-level.h>

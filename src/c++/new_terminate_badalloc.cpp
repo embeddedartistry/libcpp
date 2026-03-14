@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 
+#include "__libcpp_compat.h"
 #include "new"
 #include "../../libcxx/src/include/atomic_support.h"
 

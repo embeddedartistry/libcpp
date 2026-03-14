@@ -291,6 +291,7 @@ libcxxabi_include_directories = [
 	include_directories('include/c++/', is_system: true),
 	include_directories('libcxxabi/include', is_system: true),
 	include_directories('libcxx/include', is_system: true),
+	include_directories('libcxx/src', is_system: false),
 ]
 libcxx_extensions_include_dir = include_directories('extensions', is_system: true)
 libcxx_include_directories = [
@@ -298,6 +299,7 @@ libcxx_include_directories = [
 	include_directories('include/c++', is_system: true),
 	include_directories('libcxxabi/include', is_system: true),
 	include_directories('libcxx/include', is_system: true),
+	include_directories('libcxx/src', is_system: false),
 	libcxx_extensions_include_dir
 ]
 

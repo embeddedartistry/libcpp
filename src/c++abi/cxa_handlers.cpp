@@ -17,7 +17,7 @@
 #include "../../libcxxabi/src/cxa_handlers.h"
 #include "../../libcxxabi/src/cxa_exception.h"
 #include "../../libcxxabi/src/private_typeinfo.h"
-#include "../../libcxxabi/src/include/atomic_support.h"
+#include "include/atomic_support.h"
 
 namespace std
 {

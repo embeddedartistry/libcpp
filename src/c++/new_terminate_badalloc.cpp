@@ -10,7 +10,7 @@
 
 #include "__libcpp_compat.h"
 #include "new"
-#include "../../libcxx/src/include/atomic_support.h"
+#include "include/atomic_support.h"
 
 #if defined(_LIBCPP_ABI_MICROSOFT)
 #if !defined(_LIBCPP_ABI_VCRUNTIME)

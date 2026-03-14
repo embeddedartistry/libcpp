@@ -36,7 +36,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include "../../libcxx/src/include/atomic_support.h"
+#include "include/atomic_support.h"
 #include "__undef_macros"
 
 #ifdef _BAREMETAL

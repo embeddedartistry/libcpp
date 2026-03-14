@@ -211,12 +211,15 @@ install_cpp_ext_headers = custom_target('install-cpp-ext-headers',
 	],
 )
 
+# configure_file outputs (__config_site, __assertion_handler) are generated
+# into the build directory. Listing them as sources ensures Meson generates
+# them before compiling dependent targets.
 install_cpp_headers_dep = declare_dependency(
 	sources: [
-		config_site_header,
-		assertion_handler_header,
 		install_cpp_ext_headers[0],
 		install_cpp_experimental_headers[0],
-		install_cpp_headers[0]
-	]
+		install_cpp_headers[0],
+	],
+	# Ensure generated config headers are visible via the build directory
+	include_directories: include_directories('.'),
 )

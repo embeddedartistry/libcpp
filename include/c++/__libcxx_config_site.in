@@ -36,6 +36,10 @@
 #mesondefine _LIBCPP_NO_EXCEPTIONS
 #mesondefine _LIBCPP_HIDE_FROM_ABI_PER_TU_BY_DEFAULT
 
+// LLVM 19 requires _LIBCPP_HARDENING_MODE_DEFAULT to be set.
+// Use _LIBCPP_HARDENING_MODE_NONE for embedded/baremetal (no runtime checks).
+#define _LIBCPP_HARDENING_MODE_DEFAULT _LIBCPP_HARDENING_MODE_NONE
+
 // Not supported: @ _LIBCPP_ABI_DEFINES@
 
 #ifdef _LIBCPP_FORCE_PTHREAD_ON_HOST
